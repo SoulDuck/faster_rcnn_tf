@@ -1,0 +1,1 @@
+n roi_blobs : 300  , roi_blobs mean 403.176818848 , roi_scores mean 0.570078611374n roi_blobs : 300  , roi_blobs mean 410.513916016 , roi_scores mean 0.561838626862
