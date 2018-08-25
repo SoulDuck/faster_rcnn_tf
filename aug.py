@@ -201,6 +201,7 @@ class TiltImages(Imgaug):
             tform ==> transformed
         :return:
         """
+        sample_dict = copy.deepcopy(sample_dict)
         # get image , coordinates
         img , coordinates = self.get_img_anns(sample_dict)
         # select one variable at list
@@ -210,12 +211,13 @@ class TiltImages(Imgaug):
         # transformed coorinates  ,[[x1,y1,w h] ,[x1`,y1`,w`,h`]]
         tform_coords = self._mask_transform(np_img.shape[:2], coordinates , self.tilt_image , angle)
         # set sample_dict
-        sample_dict=self.set_img_anns(sample_dict , tform_img , tform_coords)
+        new_sample_dict=self.set_img_anns(sample_dict , tform_img , tform_coords)
 
-        return sample_dict
+        return new_sample_dict
 
 class RotationTransform(Imgaug):
     def __call__(self, sample_dict):
+        sample_dict = copy.deepcopy(sample_dict)
         # get image , coordinates
         img , coordinates = self.get_img_anns(sample_dict)
         # select one variable at list
@@ -232,6 +234,7 @@ class RotationTransform(Imgaug):
 class FlipTransform(Imgaug):
     def __call__(self,sample_dict):
         # get image , coordinates
+        sample_dict = copy.deepcopy(sample_dict)
         img , coordinates = self.get_img_anns(sample_dict)
         # select one variable at list
         # numpy flip flop lib only support value > 0
@@ -240,11 +243,12 @@ class FlipTransform(Imgaug):
             index %= 2
         tform_img = self.flipflop(np_img , index)
         tform_coords = self._mask_transform(np_img.shape[:2], coordinates, self.flipflop, index)
-        sample_dict = self.set_img_anns(sample_dict, tform_img, tform_coords)
-        return sample_dict
+        new_sample_dict = self.set_img_anns(sample_dict, tform_img, tform_coords)
+        return new_sample_dict
 
 class CenterCrop(Imgaug):
     def __call__(self, sample_dict):
+        sample_dict = copy.deepcopy(sample_dict)
         np_img, coordi = self.get_img_anns(sample_dict)
         # Left top range , shape : ([0,minx1] , [0,min y1])
         # Right Bottom , shape : ([max_x2 img_w],[max_y2 ,img_h ])
@@ -347,35 +351,37 @@ if __name__ == '__main__':
     sample_dict={}
     sample_dict['img'] = np_img
     sample_dict['anns'] = coords
+    print 'original annotations {}'.format(sample_dict['anns'])
     centercrop = CenterCrop()
     cc_sample_dict=centercrop(sample_dict)
 
     cc_img = cc_sample_dict['img']
     cc_coords = cc_sample_dict['anns']
     imgaug.show_image(cc_img, cc_coords)
-
-
-    exit()
+    print 'center crop annotations {}'.format(cc_sample_dict['anns'])
+    print 'original annotations {}'.format(sample_dict['anns'])
 
     # rotate 90 , 180 ,270
-    copy_sample_dict = copy.deepcopy(sample_dict)
+    #copy_sample_dict = copy.deepcopy(sample_dict)
     rt_images = RotationTransform()
-    rt_sample_dict = rt_images(copy_sample_dict)
+    rt_sample_dict = rt_images(sample_dict)
     rt_img = rt_sample_dict['img']
     rt_coords = rt_sample_dict['anns']
     imgaug.show_image(rt_img, rt_coords)
+    print 'rotate annotations {}'.format(rt_coords)
+    print 'original annotations {}'.format(sample_dict['anns'])
 
-    copy_sample_dict = copy.deepcopy(sample_dict)
+    #copy_sample_dict = copy.deepcopy(sample_dict)
     # rotate angle
-    t_sample_dict=tilt_images(copy_sample_dict)
+    t_sample_dict=tilt_images(sample_dict)
     t_img=t_sample_dict['img']
     t_coords= t_sample_dict['anns']
     imgaug.show_image(t_img, t_coords)
 
     # flip flop images
-    copy_sample_dict = copy.deepcopy(sample_dict)
+    #copy_sample_dict = copy.deepcopy(sample_dict)
     ft_images = FlipTransform()
-    ft_sample_dict = ft_images(copy_sample_dict)
+    ft_sample_dict = ft_images(sample_dict)
     ft_img = ft_sample_dict['img']
     ft_coords = ft_sample_dict['anns']
     imgaug.show_image(ft_img, ft_coords)
