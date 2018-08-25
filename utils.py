@@ -1,5 +1,6 @@
 import os
 from scipy.misc import imread
+from PIL import  Image
 import numpy as np
 import matplotlib
 import tensorflow as tf
@@ -15,7 +16,7 @@ def progress(i, max_step):
     sys.stdout.flush()
 def next_img_gtboxes(image_idx):
     IMAGE_FORMAT= '.jpg'
-    data_dir='./clutteredKIA'
+    data_dir='./clutteredWALLY'
     train_name_path = os.path.join(data_dir, 'Names', 'train.txt')
     train_names = [line.rstrip() for line in open(train_name_path, 'r')]
     if image_idx > (len(train_names)-1) :
@@ -24,7 +25,9 @@ def next_img_gtboxes(image_idx):
 
     img_path = os.path.join(data_dir, 'Images', train_names[image_idx] + IMAGE_FORMAT)
     annotation_path = os.path.join(data_dir, 'Annotations', train_names[image_idx] + '.txt')
-    img = imread(img_path)
+    img = Image.open(img_path).convert('RGB')
+    img=np.asarray(img)
+    #img = imread(img_path)
 
     gt_bbox = np.loadtxt(annotation_path, ndmin=2)
     #im_dims = np.array(img.shape[:2]).reshape([1, 2])
@@ -100,20 +103,24 @@ def draw_rectangles_ptl(img,ptl_bbox , inv_fast_bbox , ptl_labels  , inv_fast_cl
     bg_bboxes = ptl_bbox[bg_indices]
     fg_bboxes = ptl_bbox[fg_indices]
     h, w = np.shape(img)[:2]
-    ax = plt.axes()
+    fig=plt.figure(figsize=[20,20])
+    ax=fig.add_subplot(111)
     plt.imshow(img)
     for fg_ind , box in enumerate(fg_bboxes[:,1:]):
-        x1, y1, x2, y2= box  # x1 ,y1 ,x2 ,y2
+        x1, y1, x2, y2 = box  # x1 ,y1 ,x2 ,y2
         plt.text(x1,y1,'{}'.format(ptl_labels[fg_indices[fg_ind]]))
         if x1 >0 and y1 >0 and x2 > 0 and y2 > 0 and x2 > x1 and y2 > y1 and w > x2 and y2 < h :
             rect = patches.Rectangle((x1, y1), x2 - x1, y2 - y1, linewidth=2, edgecolor='b', facecolor='none')
             ax.add_patch(rect)
         else:
             continue
-    plt.savefig(savepath.replace('roi' , 'ptl_fg_roi'))
+    extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+    fig.savefig(savepath.replace('roi' , 'ptl_fg_roi'), bbox_inches=extent)
+    #plt.savefig(savepath.replace('roi' , 'ptl_fg_roi'))
     plt.close()
 
-    ax = plt.axes()
+    fig=plt.figure(figsize=[20,20])
+    ax=fig.add_subplot(111)
     plt.imshow(img)
     for box in bg_bboxes[:,1:] :
         x1, y1, x2, y2= box  # x1 ,y1 ,x2 ,y2
@@ -122,10 +129,13 @@ def draw_rectangles_ptl(img,ptl_bbox , inv_fast_bbox , ptl_labels  , inv_fast_cl
             ax.add_patch(rect)
         else:
             continue
-    plt.savefig(savepath.replace('roi' , 'ptl_bg_roi'))
+    extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+    fig.savefig(savepath.replace('roi' , 'ptl_bg_roi'), bbox_inches=extent)
+    #plt.savefig(savepath.replace('roi' , 'ptl_bg_roi'))
     plt.close()
 
-    ax = plt.axes()
+    fig=plt.figure(figsize=[20,20])
+    ax=fig.add_subplot(111)
     plt.imshow(img)
     for i,box in enumerate(inv_fast_bbox[:len(fg_indices)]):
         pred = inv_fast_cls[i]
@@ -139,8 +149,12 @@ def draw_rectangles_ptl(img,ptl_bbox , inv_fast_bbox , ptl_labels  , inv_fast_cl
             ax.add_patch(rect)
         else:
             continue
-    plt.savefig(savepath.replace('roi' , 'ptl_inv_roi'))
+
+    extent = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+    fig.savefig(savepath.replace('roi', 'ptl_inv_roi'), bbox_inches=extent)
+    #plt.savefig(savepath.replace('roi' , 'ptl_inv_roi'))
     plt.close()
+
 
     ax = plt.axes()
     plt.imshow(img)
