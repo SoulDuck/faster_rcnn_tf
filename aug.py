@@ -6,6 +6,7 @@ import matplotlib.patches as patches
 import numpy.random as npr
 import random
 import cv2
+import copy
 # ref : https://github.com/mdbloice/Augmentor
 class Imgaug(object):
     def __init__(self):
@@ -115,34 +116,154 @@ class Imgaug(object):
             rect = patches.Rectangle((x1,y1) ,x2-x1 , y2- y1 , fill = '')
             ax.add_patch(rect)
         plt.show()
+    def limit_constant(self , value , limit_range ):
+        """
+        :param value:
+        :param limit: if param `limit_range` is 10 , it restrict param `value` from -10 to 10
+        :return:
+        """
+        assert limit_range > 0
+        if value < 0 :
+            value = abs(value) % limit_range
+            value = -value
+            print value
+        else:
+            value = value % limit_range
+        return value
+    def choice_var(self , range_ = range(-10 , 10)): #
+        """
+        choose Random Variable at input list
+        :param range_:
+            type : list
+            example : [-10, -9 , -8 , 7 ]
+        :return: int value
+        """
+        assert type(range_) == list #
+        random.shuffle(range_)
+        return range_[0]
+
+    def get_img_anns(self , sample_dict):
+        assert type(sample_dict) == dict and 'img' in sample_dict.keys() and 'anns' in sample_dict.keys()
+        np_img=sample_dict['img']
+        anns = sample_dict['anns']
+        return np_img , anns
+    def set_img_anns(self, sample_dict , np_img , anns ):
+        assert type(sample_dict) == dict
+        sample_dict['img'] = np_img
+        sample_dict['anns'] = anns
+        return sample_dict
+
+    def get_minmax(self , np_img , anns ):
+        """
+        get min x1 ,min y1 ,max x2 ,y2 from multiple coordis
+        example [[x1,y1,w,h],[x1`,y1`,w`,h`]]
+
+        :param np_img:
+        :param anns:
+        :return:
+        """
+        assert len(np.shape(np_img)) == 3 and np.ndim(np.asarray(anns)) == 2, 'ndim : {} , shape {}'.format(
+            np.ndim(np.asarray(anns)), np.shape(np_img))
+        x1s , y1s , ws, hs =map(lambda ind : np.asarray(anns)[:,ind] , [0,1,2,3])
+        x2s =ws + x1s
+        y2s = hs +y1s
+        min_x1 , min_y1= map(min , [x1s , y1s])
+        max_x2, max_y2 = map(max , [x2s, y2s])
+        return min_x1 , min_y1 , max_x2 , max_y2
+
+
+    def _cal_margin(self , img , anns):
+        assert np.ndim(img) ==2 or np.ndim(img) ==3
+        min_x1 , min_y1, max_x2 , max_y2=self.get_minmax(img , anns )
+        img_h,img_w=np.shape(img)[:2]
+        LT_range=[(0,min_x1),(0,min_y1)]
+        RB_range=[(max_x2 , img_w),(max_y2 ,img_h )]
+
+        return LT_range , RB_range
+
+    def imagecrop(self , np_img , coordi):
+        """
+
+        :param np_img:
+        :param coordi: [x1,y1,x2,y2]
+        :return:
+        """
+
 
 class TiltImages(Imgaug):
-    def __call__(self, np_img, coordinates , angle):
+    def __call__(self, sample_dict):
+        """
+        sample_dict:
+            key : 'img' , 'anns'
+            value : 'img' = numpy image , 'anns' : list [[x1,y1,w,h] ,[x1`,y1`,w`,h`] ...]
+
+        term :
+            tform ==> transformed
+        :return:
+        """
+        # get image , coordinates
+        img , coordinates = self.get_img_anns(sample_dict)
+        # select one variable at list
+        angle = self.choice_var(range(-10 , 10))
+        # transformed Numpy image
         tform_img = self.tilt_image(np_img, angle)
+        # transformed coorinates  ,[[x1,y1,w h] ,[x1`,y1`,w`,h`]]
         tform_coords = self._mask_transform(np_img.shape[:2], coordinates , self.tilt_image , angle)
-        return tform_img , tform_coords
+        # set sample_dict
+        sample_dict=self.set_img_anns(sample_dict , tform_img , tform_coords)
+
+        return sample_dict
 
 class RotationTransform(Imgaug):
-    def __call__(self, np_img , coordinates , index):
+    def __call__(self, sample_dict):
+        # get image , coordinates
+        img , coordinates = self.get_img_anns(sample_dict)
+        # select one variable at list
+        index = abs(self.choice_var(range(-10 , 10)))
         # rt = Rotate , Roatate Image
         tform_img=self.rotate90(np_img , index)
         tform_coords = self._mask_transform(np_img.shape[:2], coordinates, self.rotate90, index)
-        #masks=self.mappings(coordinates)
-        #tform_masks = map(lambda mask: self.rotate90(mask ,index), masks)  # rotated masked
-        #tform_coords = self.get_TLBRs(tform_masks )
-        return tform_img  , tform_coords
+        # set sample_dict
+        sample_dict=self.set_img_anns(sample_dict , tform_img , tform_coords)
+
+
+        return sample_dict
 
 class FlipTransform(Imgaug):
-    def __call__(self, np_img , coordinates , index):
-        if index > 1 :
+    def __call__(self,sample_dict):
+        # get image , coordinates
+        img , coordinates = self.get_img_anns(sample_dict)
+        # select one variable at list
+        # numpy flip flop lib only support value > 0
+        index = abs(self.choice_var(range(-10 , 10)))
+        if index > 1:
             index %= 2
-
         tform_img = self.flipflop(np_img , index)
         tform_coords = self._mask_transform(np_img.shape[:2], coordinates, self.flipflop, index)
-        #masks=self.mappings(coordinates)
-        #tform_masks = map(lambda mask: self.flipflop(mask ,index), masks)  # rotated masked
-        #tform_coords = self.get_TLBRs(tform_masks )
-        return tform_img  , tform_coords
+        sample_dict = self.set_img_anns(sample_dict, tform_img, tform_coords)
+        return sample_dict
+
+class CenterCrop(Imgaug):
+    def __call__(self, sample_dict):
+        np_img, coordi = self.get_img_anns(sample_dict)
+        # Left top range , shape : ([0,minx1] , [0,min y1])
+        # Right Bottom , shape : ([max_x2 img_w],[max_y2 ,img_h ])
+        LT_range , RB_range = self._cal_margin(np_img , coordi)
+        crop_x1 = self.choice_var(range(LT_range[0][0] , LT_range[0][1]))
+        crop_y1 = self.choice_var(range(LT_range[1][0], LT_range[1][1]))
+        crop_x2 = self.choice_var(range(RB_range[0][1] ,RB_range[0][0]))
+        crop_y2 = self.choice_var(range(RB_range[1][1] ,RB_range[1][0]))
+        #tform_coords = self._mask_transform(np_img.shape[:2], coordi, self.flipflop, index)
+
+        # Crop Image
+        cropped_img = np_img[crop_y1: crop_y2, crop_x1: crop_x2]
+        coordi=np.asarray(coordi)
+        cropped_coordis = coordi - np.asarray([crop_x1, crop_y1, crop_x1, crop_y1])
+        new_sample_dict={}
+        new_sample_dict=self.set_img_anns(new_sample_dict,cropped_img , cropped_coordis)
+        return new_sample_dict
+
+
 
 class BrightnessAugmentation(object):
     """
@@ -219,26 +340,47 @@ if __name__ == '__main__':
     coords = [coord_bike , coord_car , coord_dog]
     print coords
     k=random.randint(0,10)
-    # rotate angle
+
+
     imgaug =Imgaug()
     tilt_images = TiltImages()
-    t_img , t_coords =tilt_images(np_img , coords , k)
-    imgaug.show_image(t_img, t_coords)
+    sample_dict={}
+    sample_dict['img'] = np_img
+    sample_dict['anns'] = coords
+    centercrop = CenterCrop()
+    cc_sample_dict=centercrop(sample_dict)
+
+    cc_img = cc_sample_dict['img']
+    cc_coords = cc_sample_dict['anns']
+    imgaug.show_image(cc_img, cc_coords)
+
+
+    exit()
 
     # rotate 90 , 180 ,270
-    imgaug =Imgaug()
+    copy_sample_dict = copy.deepcopy(sample_dict)
     rt_images = RotationTransform()
-    rt_img , rt_coords = rt_images(np_img , coords , k)
+    rt_sample_dict = rt_images(copy_sample_dict)
+    rt_img = rt_sample_dict['img']
+    rt_coords = rt_sample_dict['anns']
     imgaug.show_image(rt_img, rt_coords)
 
+    copy_sample_dict = copy.deepcopy(sample_dict)
+    # rotate angle
+    t_sample_dict=tilt_images(copy_sample_dict)
+    t_img=t_sample_dict['img']
+    t_coords= t_sample_dict['anns']
+    imgaug.show_image(t_img, t_coords)
+
     # flip flop images
-    imgaug = Imgaug()
+    copy_sample_dict = copy.deepcopy(sample_dict)
     ft_images = FlipTransform()
-    ft_img, ft_coords = ft_images(np_img, coords, k)
+    ft_sample_dict = ft_images(copy_sample_dict)
+    ft_img = ft_sample_dict['img']
+    ft_coords = ft_sample_dict['anns']
     imgaug.show_image(ft_img, ft_coords)
 
-
-    """
+"""
     img = Image.open('sample_img.png')
     fig = plt.figure()
     ax=fig.add_subplot(111)
