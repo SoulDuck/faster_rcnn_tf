@@ -140,7 +140,6 @@ class Imgaug(object):
         :return: int value
         """
         assert type(range_) == list
-
         random.shuffle(range_)
         return range_[0]
 
@@ -182,7 +181,7 @@ class Imgaug(object):
         LT_range=[(0,min_x1),(0,min_y1)]
         RT_range = [( max_x2, img_w),(0 , min_y1)]
         RB_range=[(max_x2 , img_w),(max_y2 ,img_h )]
-        LB_range = [(0 , min_x1),(max_y2 , img_w)]
+        LB_range = [(0 , min_x1),(max_y2 , img_h)]
 
         return LT_range , LB_range , RB_range , RT_range
 
@@ -295,17 +294,21 @@ class CenterCrop(Imgaug):
         # Left top range , shape : ([0,minx1] , [0,min y1]) # Right Bottom , shape : ([max_x2 img_w],[max_y2 ,img_h ])
         LT_range, LB_range, RB_range, RT_range = self._cal_margin(np_img , coordi)
         # Get Max , Min x1,x2 ,y1,y2
-        start_w, min_x1 , start_h , min_y1 =LT_range[0][0], LT_range[0][1] ,LT_range[1][0], LT_range[1][1]
-        end_w, max_x2, end_h, max_y2 = RB_range[0][0], RB_range[0][1], RB_range[1][0], RB_range[1][1]
+        #start_w, min_x1 , start_h , min_y1 =LT_range[0][0], LT_range[0][1] ,LT_range[1][0], LT_range[1][1]
+        #end_w, max_x2, end_h, max_y2 = RB_range[0][0], RB_range[0][1], RB_range[1][0], RB_range[1][1]
         # get losses
+        print LT_range, LB_range, RB_range, RT_range
         lt_l2 , lb_l2 , rb_l2 , rt_l2 = self.get_L2s(LT_range , LB_range , RB_range , RT_range)
         ranges_losses  = zip([LT_range , LB_range , RB_range , RT_range] , [lt_l2 , lb_l2 , rb_l2 , rt_l2])
         #
         ind = np.argmin([lt_l2 , lb_l2 , rb_l2 , rt_l2])
         valid_range , valid_lossses = ranges_losses[ind]
         #
+        print valid_range[0][0] ,valid_range[0][1]
+        print valid_range[1][0] , valid_range[1][1]
         x_rand = self.choice_var(range(valid_range[0][0] ,valid_range[0][1]))
         y_rand = self.choice_var(range(valid_range[1][0] , valid_range[1][1]))
+
 
 
         #
@@ -390,64 +393,19 @@ class Kmeans(object):
 
         return clusters
 if __name__ == '__main__':
-    """
-    img = Image.open('dog.jpg').convert('RGB')
-    np_img = np.asarray(img)
-    coord_bike = [124,134,124+ 443,134+286]
-    coord_car = [468,74,468+218,74+96]
-    coord_dog = [131,219,131+180,219+324]
-    coords = [coord_bike , coord_car , coord_dog]
-    k=random.randint(0,10)
 
-    imgaug =Imgaug()
-    tilt_images = TiltImages()
-    sample_dict={}
-    sample_dict['img'] = np_img
-    sample_dict['anns'] = coords
-
-    print np.shape(np_img)
-    print coords
-
-    centercrop = CenterCrop()
-    cc_sample_dict=centercrop(sample_dict)
-
-    cc_img = cc_sample_dict['img']
-    cc_coords = cc_sample_dict['anns']
-    imgaug.show_image(cc_img, cc_coords)
-
-    # rotate 90 , 180 ,270
-    #copy_sample_dict = copy.deepcopy(sample_dict)
-    rt_images = RotationTransform()
-    rt_sample_dict = rt_images(cc_sample_dict)
-    rt_img = rt_sample_dict['img']
-    rt_coords = rt_sample_dict['anns']
-    imgaug.show_image(rt_img, rt_coords)
-
-    #copy_sample_dict = copy.deepcopy(sample_dict)
-    # rotate angle
-    t_sample_dict=tilt_images(rt_sample_dict)
-    t_img=t_sample_dict['img']
-    t_coords= t_sample_dict['anns']
-    imgaug.show_image(t_img, t_coords)
-
-    # flip flop images
-    #copy_sample_dict = copy.deepcopy(sample_dict)
-    ft_images = FlipTransform()
-    ft_sample_dict = ft_images(t_sample_dict)
-    ft_img = ft_sample_dict['img']
-    ft_coords = ft_sample_dict['anns']
-    imgaug.show_image(ft_img, ft_coords)
-"""
     img = Image.open('dog.jpg').convert('RGB')
     np_img = np.asarray(img)
     coord_bike = [124,134,124+ 443,134+286]
     coord_car = [468,74,468+218,74+96]
     coord_dog = [131,219,131+180,219+324]
     coords = [coord_bike  , coord_car , coord_dog]
+
     # load Images
     sample_dict = {}
     sample_dict['img'] = np_img
     sample_dict['anns'] = coords
+
     # Tilt
     imgaug=Imgaug()
     tilt_images = TiltImages()
@@ -470,7 +428,6 @@ if __name__ == '__main__':
     ft_coords = sample_dict['anns']
     imgaug.show_image(ft_img, ft_coords , 'flip flop')
 
-
     #center crop
     center_crop= CenterCrop()
     sample_dict=center_crop(sample_dict)
@@ -479,66 +436,3 @@ if __name__ == '__main__':
     imgaug.show_image(cc_img, cc_coords , 'center crop')
 
 
-
-"""
-    img = Image.open('sample_img.png')
-    fig = plt.figure()
-    ax=fig.add_subplot(111)
-    rect = patches.Rectangle((100,100) , 300 ,400)
-    ax.add_patch(rect)
-    ax.imshow(img)
-    plt.close()
-
-    ##
-    imgsize = np.shape(img)[:2]
-    imgaug=Imgaug()
-    mask = imgaug.mapping(imgsize ,(100 ,100 , 400 , 500))
-    print imgaug.get_TLBR(mask)
-    plt.imshow(mask)
-    plt.show()
-
-    ##
-    rb_img= imgaug.rotate_bound(np.asarray(img ), 10)
-    rb_mask = imgaug.rotate_bound(np.asarray(mask), 10)
-    fig = plt.figure()
-    ax=fig.add_subplot(111)
-    ax.imshow(rb_mask)
-    x1,y1,x2,y2=imgaug.get_TLBR(rb_mask)
-    rect = patches.Rectangle((x1,y1),x2-x1, y2-y1)
-    ax.add_patch(rect)
-    plt.show()
-
-    ##
-    rt = RotationTransform()
-    rt_mask = rt(mask)
-    print imgaug.get_TLBR(rt_mask)
-    plt.imshow(rt_mask)
-    plt.show()
-
-    ##
-    ft = FlipTransform()
-    ft_mask = ft(mask)
-    print imgaug.get_TLBR(rt_mask)
-    plt.imshow(ft_mask)
-    plt.show()
-
-    ##
-    np_img=np.asarray(img)
-    br = BrightnessAugmentation()
-    br_img =br(np_img)
-    plt.imshow(np_img)
-    plt.show()
-    plt.close()
-    plt.imshow(br_img)
-    plt.show()
-
-    ##
-    ct = ContrastTranform()
-    ct_img=ct(np_img)
-    print np.shape(np.asarray(ct_img))
-    plt.imshow(ct_img)
-    plt.show()
-
-    exit()
-
-"""
