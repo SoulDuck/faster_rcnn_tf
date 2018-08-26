@@ -6,6 +6,7 @@ import matplotlib.patches as patches
 import numpy.random as npr
 import random
 import cv2
+import math
 import copy
 # ref : https://github.com/mdbloice/Augmentor
 class Imgaug(object):
@@ -138,7 +139,8 @@ class Imgaug(object):
             example : [-10, -9 , -8 , 7 ]
         :return: int value
         """
-        assert type(range_) == list #
+        assert type(range_) == list
+
         random.shuffle(range_)
         return range_[0]
 
@@ -164,9 +166,7 @@ class Imgaug(object):
         """
         assert len(np.shape(np_img)) == 3 and np.ndim(np.asarray(anns)) == 2, 'ndim : {} , shape {}'.format(
             np.ndim(np.asarray(anns)), np.shape(np_img))
-        x1s , y1s , ws, hs =map(lambda ind : np.asarray(anns)[:,ind] , [0,1,2,3])
-        x2s =ws + x1s
-        y2s = hs +y1s
+        x1s , y1s , x2s , y2s =map(lambda ind : np.asarray(anns)[:,ind] , [0,1,2,3])
         min_x1 , min_y1= map(min , [x1s , y1s])
         max_x2, max_y2 = map(max , [x2s, y2s])
         return min_x1 , min_y1 , max_x2 , max_y2
@@ -174,20 +174,58 @@ class Imgaug(object):
 
     def _cal_margin(self , img , anns):
         assert np.ndim(img) ==2 or np.ndim(img) ==3
-        min_x1 , min_y1, max_x2 , max_y2=self.get_minmax(img , anns )
+        min_x1, min_y1, max_x2, max_y2 = self.get_minmax(img, anns)
         img_h,img_w=np.shape(img)[:2]
+        print self.get_minmax(img, anns)
+        assert img_h > max_y2 and img_w > max_x2
+
         LT_range=[(0,min_x1),(0,min_y1)]
+        RT_range = [( max_x2, img_w),(0 , min_y1)]
         RB_range=[(max_x2 , img_w),(max_y2 ,img_h )]
+        LB_range = [(0 , min_x1),(max_y2 , img_w)]
 
-        return LT_range , RB_range
+        return LT_range , LB_range , RB_range , RT_range
 
-    def imagecrop(self , np_img , coordi):
+    def get_L2(self , coordi):
+
         """
+        get l2 distance from crop x1 , crop y1 , crop x2 , crop y2
+        :param np_img:
+        :param coordi: [(x1,x2),(y1,y2)]
+        :return:
+        """
+        xs , ys =coordi
+        x1, x2 = xs
+        y1 ,y2 = ys
+        dist = math.sqrt((x2- x1 )**2 + (y2 - y1) **2)
+        return  dist
 
+    def get_L2s (self , *args):
+        """
+        :param args: LT , LB , RB , RT
+        :return:
+        """
+        return map(self.get_L2 , args)
+
+    def get_ctr(self , coordi):
+        """
+        get center point  from   x1 ,y1 , x2 , y2
         :param np_img:
         :param coordi: [x1,y1,x2,y2]
         :return:
         """
+        x1,y1,x2,y2=coordi
+        x_ctr = ((x2 - x1) /2)
+        y_ctr = ((y2 - y1) / 2)
+        return x_ctr, y_ctr
+
+
+
+
+
+
+
+
 
 
 class TiltImages(Imgaug):
@@ -203,7 +241,7 @@ class TiltImages(Imgaug):
         """
         sample_dict = copy.deepcopy(sample_dict)
         # get image , coordinates
-        img , coordinates = self.get_img_anns(sample_dict)
+        np_img , coordinates = self.get_img_anns(sample_dict)
         # select one variable at list
         angle = self.choice_var(range(-10 , 10))
         # transformed Numpy image
@@ -219,7 +257,7 @@ class RotationTransform(Imgaug):
     def __call__(self, sample_dict):
         sample_dict = copy.deepcopy(sample_dict)
         # get image , coordinates
-        img , coordinates = self.get_img_anns(sample_dict)
+        np_img , coordinates = self.get_img_anns(sample_dict)
         # select one variable at list
         index = abs(self.choice_var(range(-10 , 10)))
         # rt = Rotate , Roatate Image
@@ -235,7 +273,7 @@ class FlipTransform(Imgaug):
     def __call__(self,sample_dict):
         # get image , coordinates
         sample_dict = copy.deepcopy(sample_dict)
-        img , coordinates = self.get_img_anns(sample_dict)
+        np_img , coordinates = self.get_img_anns(sample_dict)
         # select one variable at list
         # numpy flip flop lib only support value > 0
         index = abs(self.choice_var(range(-10 , 10)))
@@ -249,24 +287,40 @@ class FlipTransform(Imgaug):
 class CenterCrop(Imgaug):
     def __call__(self, sample_dict):
         sample_dict = copy.deepcopy(sample_dict)
+        # coordi x1, y1, x2, y2
         np_img, coordi = self.get_img_anns(sample_dict)
-        # Left top range , shape : ([0,minx1] , [0,min y1])
-        # Right Bottom , shape : ([max_x2 img_w],[max_y2 ,img_h ])
-        LT_range , RB_range = self._cal_margin(np_img , coordi)
-        crop_x1 = self.choice_var(range(LT_range[0][0] , LT_range[0][1]))
-        crop_y1 = self.choice_var(range(LT_range[1][0], LT_range[1][1]))
-        crop_x2 = self.choice_var(range(RB_range[0][1] ,RB_range[0][0]))
-        crop_y2 = self.choice_var(range(RB_range[1][1] ,RB_range[1][0]))
-        #tform_coords = self._mask_transform(np_img.shape[:2], coordi, self.flipflop, index)
+        h,w=np.shape(np_img)[:2]
+        # get x,y center
+        x_ctr, y_ctr=self.get_ctr([0,0,w,h])
+        # Left top range , shape : ([0,minx1] , [0,min y1]) # Right Bottom , shape : ([max_x2 img_w],[max_y2 ,img_h ])
+        LT_range, LB_range, RB_range, RT_range = self._cal_margin(np_img , coordi)
+        # Get Max , Min x1,x2 ,y1,y2
+        start_w, min_x1 , start_h , min_y1 =LT_range[0][0], LT_range[0][1] ,LT_range[1][0], LT_range[1][1]
+        end_w, max_x2, end_h, max_y2 = RB_range[0][0], RB_range[0][1], RB_range[1][0], RB_range[1][1]
+        # get losses
+        lt_l2 , lb_l2 , rb_l2 , rt_l2 = self.get_L2s(LT_range , LB_range , RB_range , RT_range)
+        ranges_losses  = zip([LT_range , LB_range , RB_range , RT_range] , [lt_l2 , lb_l2 , rb_l2 , rt_l2])
+        #
+        ind = np.argmin([lt_l2 , lb_l2 , rb_l2 , rt_l2])
+        valid_range , valid_lossses = ranges_losses[ind]
+        #
+        x_rand = self.choice_var(range(valid_range[0][0] ,valid_range[0][1]))
+        y_rand = self.choice_var(range(valid_range[1][0] , valid_range[1][1]))
 
-        # Crop Image
-        cropped_img = np_img[crop_y1: crop_y2, crop_x1: crop_x2]
-        coordi=np.asarray(coordi)
-        cropped_coordis = coordi - np.asarray([crop_x1, crop_y1, crop_x1, crop_y1])
+
+        #
+        x_crop = abs(x_ctr - x_rand)
+        y_crop = abs(y_ctr - y_rand)
+        x_crop_min = x_ctr - x_crop
+        y_crop_min = y_ctr - y_crop
+        #
+        cropped_img = np_img[y_ctr - y_crop : y_ctr + y_crop, x_ctr - x_crop : x_ctr + x_crop]
+        # Get coordinates
+        cropped_coordis = coordi - np.asarray([x_crop_min, y_crop_min, x_crop_min, y_crop_min])
         new_sample_dict={}
         new_sample_dict=self.set_img_anns(new_sample_dict,cropped_img , cropped_coordis)
-        return new_sample_dict
 
+        return new_sample_dict
 
 
 class BrightnessAugmentation(object):
@@ -336,44 +390,42 @@ class Kmeans(object):
 
         return clusters
 if __name__ == '__main__':
+    """
     img = Image.open('dog.jpg').convert('RGB')
     np_img = np.asarray(img)
     coord_bike = [124,134,124+ 443,134+286]
     coord_car = [468,74,468+218,74+96]
     coord_dog = [131,219,131+180,219+324]
     coords = [coord_bike , coord_car , coord_dog]
-    print coords
     k=random.randint(0,10)
-
 
     imgaug =Imgaug()
     tilt_images = TiltImages()
     sample_dict={}
     sample_dict['img'] = np_img
     sample_dict['anns'] = coords
-    print 'original annotations {}'.format(sample_dict['anns'])
+
+    print np.shape(np_img)
+    print coords
+
     centercrop = CenterCrop()
     cc_sample_dict=centercrop(sample_dict)
 
     cc_img = cc_sample_dict['img']
     cc_coords = cc_sample_dict['anns']
     imgaug.show_image(cc_img, cc_coords)
-    print 'center crop annotations {}'.format(cc_sample_dict['anns'])
-    print 'original annotations {}'.format(sample_dict['anns'])
 
     # rotate 90 , 180 ,270
     #copy_sample_dict = copy.deepcopy(sample_dict)
     rt_images = RotationTransform()
-    rt_sample_dict = rt_images(sample_dict)
+    rt_sample_dict = rt_images(cc_sample_dict)
     rt_img = rt_sample_dict['img']
     rt_coords = rt_sample_dict['anns']
     imgaug.show_image(rt_img, rt_coords)
-    print 'rotate annotations {}'.format(rt_coords)
-    print 'original annotations {}'.format(sample_dict['anns'])
 
     #copy_sample_dict = copy.deepcopy(sample_dict)
     # rotate angle
-    t_sample_dict=tilt_images(sample_dict)
+    t_sample_dict=tilt_images(rt_sample_dict)
     t_img=t_sample_dict['img']
     t_coords= t_sample_dict['anns']
     imgaug.show_image(t_img, t_coords)
@@ -381,10 +433,52 @@ if __name__ == '__main__':
     # flip flop images
     #copy_sample_dict = copy.deepcopy(sample_dict)
     ft_images = FlipTransform()
-    ft_sample_dict = ft_images(sample_dict)
+    ft_sample_dict = ft_images(t_sample_dict)
     ft_img = ft_sample_dict['img']
     ft_coords = ft_sample_dict['anns']
     imgaug.show_image(ft_img, ft_coords)
+"""
+    img = Image.open('dog.jpg').convert('RGB')
+    np_img = np.asarray(img)
+    coord_bike = [124,134,124+ 443,134+286]
+    coord_car = [468,74,468+218,74+96]
+    coord_dog = [131,219,131+180,219+324]
+    coords = [coord_bike  , coord_car , coord_dog]
+    # load Images
+    sample_dict = {}
+    sample_dict['img'] = np_img
+    sample_dict['anns'] = coords
+    # Tilt
+    imgaug=Imgaug()
+    tilt_images = TiltImages()
+    sample_dict =tilt_images(sample_dict)
+    t_img = sample_dict['img']
+    t_coords = sample_dict['anns']
+    imgaug.show_image(t_img, t_coords , 'tilt')
+
+    # rotate 90 , 180 ,270
+    rt_images = RotationTransform()
+    sample_dict = rt_images(sample_dict)
+    rt_img = sample_dict['img']
+    rt_coords = sample_dict['anns']
+    imgaug.show_image(rt_img, rt_coords , 'rotate')
+
+    # flip flop images
+    flip_transform = FlipTransform()
+    sample_dict = flip_transform(sample_dict)
+    ft_img = sample_dict['img']
+    ft_coords = sample_dict['anns']
+    imgaug.show_image(ft_img, ft_coords , 'flip flop')
+
+
+    #center crop
+    center_crop= CenterCrop()
+    sample_dict=center_crop(sample_dict)
+    cc_img = sample_dict['img']
+    cc_coords = sample_dict['anns']
+    imgaug.show_image(cc_img, cc_coords , 'center crop')
+
+
 
 """
     img = Image.open('sample_img.png')
