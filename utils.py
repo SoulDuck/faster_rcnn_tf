@@ -16,7 +16,7 @@ def progress(i, max_step):
     sys.stdout.flush()
 def next_img_gtboxes(image_idx):
     IMAGE_FORMAT= '.jpg'
-    data_dir='./clutteredWALLY'
+    data_dir='./clutteredPOCKIA'
     train_name_path = os.path.join(data_dir, 'Names', 'train.txt')
     train_names = [line.rstrip() for line in open(train_name_path, 'r')]
     if image_idx > (len(train_names)-1) :
