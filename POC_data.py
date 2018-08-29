@@ -1,14 +1,19 @@
 #-*- coding:utf -*-
 import glob , os
 import argparse
+from PIL import Image
+import cv2
+import numpy as np
 class Poc_datum(object):
     def __init__(self , label_path , images_dir , image_ext = 'jpg'):
         self.root_dir = 'clutteredPOCKIA'
         self.label_path = label_path
         self.img_dirpath = images_dir
         self.img_paths = glob.glob(os.path.join(self.img_dirpath , '*.{}'.format(image_ext)))
-        # get labels
+        # Get labels
         self.poc_labels_dict = self._arrange_labels()
+        self.show_label_and_images()
+        self._count_labels()
         # clutteredPOCKIA folder 및 sub folder 을 생성합니다. 그리고 해당 형식에 맞게 저장합니다
         self.error_indices = self._create_clutteredPOCKIA()
         # 잘못된 좌표값이 있는 이미지는 list 에서 제거 합니다.
@@ -118,6 +123,61 @@ class Poc_datum(object):
                 print 'error name : {}'.format(name)
                 err_count += 1
         print err_count
+
+    def show_label_and_images(self):
+        sample_dir= './clutteredPOCKIA/sample_images'
+        lab_1_2_img=os.path.join(sample_dir , '20180109_130752_0090.jpg')
+        lab_3_4_img = os.path.join(sample_dir, '20180109_130752_0314.jpg')
+        lab_5_6_img = os.path.join(sample_dir, '20180109_130816_0218.jpg')
+        lab_7_8_img = os.path.join(sample_dir, '20180109_130752_0564.jpg')
+        print self.poc_labels_dict['20180109_130752_0090']
+        print self.poc_labels_dict['20180109_130752_0314']
+        print self.poc_labels_dict['20180109_130816_0218']
+        print self.poc_labels_dict['20180109_130752_0564']
+
+        def _draw_rect( img  , coordinates  ):
+            # coordinates = [x1,y1,x2,y2,label]
+            x,y,w,h,label = coordinates
+            x,y,w,h=map(int , [x,y,w,h])
+            img = cv2.rectangle(img, (x,y), (x+w, y+h),(0,255,0) , 3)
+            img = cv2.putText(img, label ,(x,y), cv2.FONT_HERSHEY_SIMPLEX, 1, (255,255,255), 2)
+            return img
+
+        img=cv2.imread(lab_1_2_img )
+        img = _draw_rect(img, self.poc_labels_dict['20180109_130752_0090'][0])
+        img = _draw_rect(img, self.poc_labels_dict['20180109_130752_0090'][1])
+        img = cv2.imread(lab_3_4_img)
+        img = _draw_rect(img, self.poc_labels_dict['20180109_130752_0314'][0])
+        img = _draw_rect(img, self.poc_labels_dict['20180109_130752_0314'][1])
+        img = cv2.imread(lab_5_6_img)
+        img = _draw_rect(img, self.poc_labels_dict['20180109_130816_0218'][0])
+        img = _draw_rect(img, self.poc_labels_dict['20180109_130816_0218'][1])
+        img = cv2.imread(lab_7_8_img)
+        img = _draw_rect(img, self.poc_labels_dict['20180109_130752_0564'][0])
+        img = _draw_rect(img, self.poc_labels_dict['20180109_130752_0564'][1])
+
+        img=np.asarray(img)
+        import matplotlib.pyplot as plt
+        plt.imshow(img)
+        plt.show()
+
+    def _count_labels(self):
+        labels = {}
+        for key in self.poc_labels_dict.keys():
+            coords=self.poc_labels_dict[key]
+            for coord in coords:
+                x,y,w,h,label = coord
+                if not label in labels.keys():
+                    labels[label] =0
+                else:
+                    labels[label] += 1
+
+        print labels
+
+
+
+
+
 
 
 if __name__ == '__main__':
