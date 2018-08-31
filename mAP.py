@@ -110,7 +110,6 @@ def poc_acc(itr_fr_blobs, fr_cls ,gt_bboxes, threshold ):
         else:
             target_acc = 0
         print '{} , accuracy : {}'.format(i, target_acc)
-        print 'overlay indices : {} '.format()
         print 'fast rcnn cls : '.format(target_pred_cls)
 
 if __name__ == '__main__':
