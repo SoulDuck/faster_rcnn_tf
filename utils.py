@@ -264,7 +264,6 @@ def draw_fr_bboxes(img , fastrcnn_cls , fastrcnn_bboxes , color , linewidth  , s
         cv2.putText(img , '{}'.format(cls) ,(x1,y1) ,font ,2 ,color)
         cv2.rectangle(img , (x1,y1) , (x2-x1,y2-y1) , color ,linewidth )
     cv2.imwrite(savepath, img)
-    exit()
 
 
 
