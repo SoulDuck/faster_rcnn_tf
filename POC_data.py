@@ -12,7 +12,7 @@ class Poc_datum(object):
         self.img_paths = glob.glob(os.path.join(self.img_dirpath , '*.{}'.format(image_ext)))
         # Get labels
         self.poc_labels_dict = self._arrange_labels()
-        #self.show_label_and_images()
+        self.show_label_and_images()
         self._count_labels()
         # clutteredPOCKIA folder 및 sub folder 을 생성합니다. 그리고 해당 형식에 맞게 저장합니다
         self.error_indices = self._create_clutteredPOCKIA()
@@ -156,10 +156,6 @@ class Poc_datum(object):
         img = _draw_rect(img, self.poc_labels_dict['20180109_130752_0564'][0])
         img = _draw_rect(img, self.poc_labels_dict['20180109_130752_0564'][1])
 
-        img=np.asarray(img)
-        import matplotlib.pyplot as plt
-        plt.imshow(img)
-        plt.show()
 
     def _count_labels(self):
         labels = {}
