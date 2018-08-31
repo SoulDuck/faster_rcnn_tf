@@ -21,7 +21,7 @@ bbox_targets_op = tf.placeholder(dtype =tf.float32 , shape=[None,4])
 bbox_inside_weights_op = tf.placeholder(dtype =tf.float32 , shape=[None,4])
 bbox_outside_weights_op = tf.placeholder(dtype =tf.float32 , shape=[None,4])
 x_, im_dims, gt_boxes, phase_train = define_placeholder()
-n_classes = 19+1
+n_classes = 8+1
 top_conv, _feat_stride = simple_convnet(x_)
 # RPN CLS
 rpn_cls = rpn_cls_layer(top_conv)
@@ -109,22 +109,12 @@ for i in range(0, max_iter):
         nms_keep = non_maximum_supression(fr_blobs_cls ,0.7)
 
         print 'before nms {} ==> after nms {}'.format(len(fr_blobs_cls) , len(nms_keep ))
-        poc_acc(itr_fr_blobs[nms_keep],fr_cls[nms_keep], src_gt_boxes , 0.5)
+        acc = poc_acc(itr_fr_blobs[nms_keep],fr_cls[nms_keep], src_gt_boxes , 0.5)
+        # model save
+        saver.save(sess , save_path = 'models/{}' , global_step= i)
+        # validate images and save image
 
 
-
-
-        # eval
-        # (NMS 후) fast rcnn bbox 을 뽑는다 . ground truths 와 비교 50% 이상이면 정답 아니면 false
-        # roi scores 에서 0.5 이상이 되는것들을 뽑는다 (bbox와 같이)
-        # fast rcnn 으로 보낸다
-        # fast_rcnn_blobs_op , fast rcnn cls 을 추출한다
-
-        #acc = poc_acc(val_imgs , val_bboxes , pred_bbox , threshold = 0.5)
-        # save model
-        #if max_acc < acc :
-        #    saver.save(sess , save_path = '{}/model_{}'.format( 'models', i)) # save faster rcn n
-        # write log  , fastrcnn_cls , fastrcnn_bbox , rpn_cls , rpn_bbox
 
 # Training
     feed_dict = {x_: src_img, im_dims: src_im_dims, gt_boxes: src_gt_boxes, phase_train: True,
@@ -136,7 +126,7 @@ for i in range(0, max_iter):
     #
     rois = sess.run(fetches=[rois_op], feed_dict=feed_dict)
     _ = sess.run(fetches=[train_op], feed_dict=feed_dict)
-    fr_cls, fr_bbox= sess.run(
+    fr_cls, fr_bbox = sess.run(
         [fast_rcnn_cls_logits, fast_rcnn_bbox_logits], feed_dict)
     sys.stdout.write('\r Progress {} / {}'.format(i,max_iter))
     sys.stdout.flush()
