@@ -9,7 +9,7 @@ from PIL import Image
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-
+import cv2
 def progress(i, max_step):
     msg = '\r {} / {}'.format(i, max_step)
     sys.stdout.write(msg)
@@ -179,7 +179,6 @@ def draw_rectangles_ptl(img,ptl_bbox , inv_fast_bbox , ptl_labels  , inv_fast_cl
     plt.close()
 
 
-
 def draw_rectangles(img ,bboxes ,scores , anchors, fname):
     img=np.squeeze(img)
     h,w=np.shape(img)[:2]
@@ -254,6 +253,22 @@ def get_name(path):
     name = os.path.split(path)[-1]
     name , ext =os.path.splitext(name)
     return name
+
+def draw_fr_bboxes(img , fastrcnn_cls , fastrcnn_bboxes , color , linewidth  , savepath):
+    np.asarray(img)
+    for i, bbox in enumerate(fastrcnn_bboxes):
+        cls = fastrcnn_cls[i]
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        x1,y1,x2,y2 = bbox
+        cv2.putText(img , '{}'.format(cls) ,(x1,y1) ,font ,2 ,color)
+        cv2.rectangle(img , (x1,y1) , (x2,y2) , color ,linewidth )
+        cv2.imwrite(savepath, img)
+
+
+
+
+
+
 if '__main__' == __name__:
     img , gt_boxes =next_img_gtboxes(image_idx=1)
     ax=plt.axes()

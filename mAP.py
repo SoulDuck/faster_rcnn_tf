@@ -102,7 +102,6 @@ def poc_acc(itr_fr_blobs, fr_cls ,gt_bboxes, threshold ):
         ## iou 가 threshold 보다  overlay indices 가 해당 gt 인 교집합을 찾는다 그러면 겹치는 게 나온다
         assert len(set(over_thr_indices)) == len(over_thr_indices) and len(set(indices)) == len(indices)
         target_indices = set(over_thr_indices) & set(indices)
-        print target_indices
         target_pred_cls = fr_cls[list(target_indices)]
         target_pred_cls = map(int ,target_pred_cls)
         if not len(target_pred_cls) ==0 :
@@ -110,7 +109,9 @@ def poc_acc(itr_fr_blobs, fr_cls ,gt_bboxes, threshold ):
             target_acc = np.sum([gt_cls ==target_pred_cls]) / float(len(target_pred_cls))
         else:
             target_acc = 0
-        print 'accuracy ',target_acc
+        print '{} , accuracy : {}'.format(i, target_acc)
+        print 'overlay indices : {} '.format()
+        print 'fast rcnn cls : '.format(target_pred_cls)
 
 if __name__ == '__main__':
     ious = [0.78, 0.88, 0.76, 0.43, 0.44]

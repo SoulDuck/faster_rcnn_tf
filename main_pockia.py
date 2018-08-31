@@ -1,7 +1,7 @@
 #-*- coding:utf-8 -*-
 import tensorflow as tf
 import numpy as np
-from utils import next_img_gtboxes , tracking_loss , non_maximum_supression
+from utils import next_img_gtboxes , tracking_loss , non_maximum_supression , draw_fr_bboxes
 from anchor_target_layer import anchor_target
 from convnet import define_placeholder , simple_convnet , rpn_cls_layer , rpn_bbox_layer , sess_start , optimizer ,rpn_cls_loss , rpn_bbox_loss ,bbox_loss
 from proposal_layer import inv_transform_layer , inv_transform_layer_fastrcnn
@@ -77,6 +77,7 @@ tb_writer.add_graph(tf.get_default_graph())
 #
 max_iter = 485 * 100
 max_acc = 0
+
 # start Training
 for i in range(0, max_iter):
     src_img , src_gt_boxes = next_img_gtboxes(i)
@@ -101,20 +102,18 @@ for i in range(0, max_iter):
         # Get Fast rcnn , RPN
         fr_cls , fr_bbox , roi_cls , roi_bbox ,itr_fr_blobs = sess.run(
             [fast_rcnn_cls_logits , fast_rcnn_bbox_logits , roi_scores_op ,roi_blobs_op ,itr_fr_blobs_op ] , feed_dict)
-
         #
         itr_fr_blobs = np.squeeze(itr_fr_blobs)
         fr_cls = np.argmax(fr_cls , axis =1 ).reshape([-1,1])
         fr_blobs_cls = np.hstack([itr_fr_blobs, fr_cls])
         nms_keep = non_maximum_supression(fr_blobs_cls ,0.7)
-
         print 'before nms {} ==> after nms {}'.format(len(fr_blobs_cls) , len(nms_keep ))
         acc = poc_acc(itr_fr_blobs[nms_keep],fr_cls[nms_keep], src_gt_boxes , 0.5)
         # model save
         saver.save(sess , save_path = 'models/{}' , global_step= i)
-        # validate images and save image
-
-
+        # save box
+        # fast bbox 중에 foreground 만 보여준다
+        draw_fr_bboxes(src_img , fr_cls , itr_fr_blobs , (255,0,0) , 3 ,savepath = 'result_fastrcnn_roi/{}.png'.format(i) )
 
 # Training
     feed_dict = {x_: src_img, im_dims: src_im_dims, gt_boxes: src_gt_boxes, phase_train: True,
