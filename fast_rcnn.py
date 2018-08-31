@@ -48,24 +48,24 @@ def roi_pool(featureMaps, rois, im_dims):
 
     return pooledFeatures , boxes , box_ind
 
-def fast_rcnn(top_conv , rois , im_dims , eval_mode ,num_classes , phase_train):
-    print '###### Fast R-CNN building.... '
+def fast_rcnn(top_conv , sample_rois , rois , im_dims,num_classes , phase_train):
+    print '###### Fast R-CNN building.... #######'
     print
     with tf.variable_scope('fast_rcnn'):
-        FRCNN_DROPOUT_KEEP_RATE =0.5
-        FRCNN_FC_HIDDEN = [1024, 1024]
-        keep_prob = FRCNN_DROPOUT_KEEP_RATE if eval_mode is False else 1.0
+        FRCNN_DROPOUT_KEEP_RATE = 0.5
+        FRCNN_FC_HIDDEN = [ 1024, 1024 ]
+        rois = tf.cond(phase_train , lambda : sample_rois  , lambda : rois )
         pooledFeatures, boxes, box_ind = roi_pool(top_conv, rois, im_dims)# roi pooling
         layer = pooledFeatures  # ? 7,7 128 Same Output
         # print layer
         for i in range(len(FRCNN_FC_HIDDEN)):
             layer = affine('fc_{}'.format(i), layer, FRCNN_FC_HIDDEN[i])
-            layer = dropout(layer, phase_train=phase_train, keep_prob=keep_prob)
+            # Dropout
+            layer =tf.cond(phase_train, lambda: tf.nn.dropout(layer, keep_prob=FRCNN_DROPOUT_KEEP_RATE), lambda: layer)
         with tf.variable_scope('cls'):
             fast_rcnn_cls_logits = affine('cls_logits', layer, num_classes, activation=None)
         with tf.variable_scope('bbox'):
             fast_rcnn_bbox_logits = affine('bbox_logits', layer, num_classes * 4, activation=None)
-
     return fast_rcnn_cls_logits , fast_rcnn_bbox_logits
 
 def fast_rcnn_cls_loss(fast_rcnn_cls_score, labels):
@@ -162,12 +162,29 @@ def bbox_transform_inv(boxes, deltas):
     pred_boxes[:, 3::4] = pred_ctr_y + 0.5 * pred_h
     return pred_boxes
 
-def get_interest_target(cls ,bbox , n_classes ):
-    assert len(cls) == len(bbox)
-    assert  np.shape(bbox)[-1] == n_classes * 4
+def get_interest_target_py(cls ,bboxes , n_classes ):
+    if np.ndim(bboxes) == 3 :
+        bboxes = np.reshape(bboxes , np.shape(bboxes)[1:])
+    assert len(cls) == len(bboxes) , 'cls : {} bboxes : {}'.format(np.shape(cls) , np.shape(bboxes))
+    assert  np.shape(bboxes)[-1] == n_classes * 4
 
     #cls = np.argmax(cls , axis =1 )
     ret_targets=[]
     for i in range(len(cls)):
-        ret_targets.append(bbox[ i , cls[i]*4 :(cls[i]+1)*4 ])
+        ret_targets.append(bboxes[ i , cls[i]*4 :(cls[i]+1)*4 ])
     return np.asarray(ret_targets)
+
+
+
+
+def get_interest_target(cls ,bboxes , n_classes):
+    target_blobs = tf.py_func(get_interest_target_py , [cls , bboxes , n_classes] , [tf.float32] )
+    return target_blobs
+
+
+
+
+
+
+
+

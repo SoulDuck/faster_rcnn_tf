@@ -16,7 +16,7 @@ def progress(i, max_step):
     sys.stdout.flush()
 def next_img_gtboxes(image_idx):
     IMAGE_FORMAT= '.jpg'
-    data_dir='./clutteredPOCKIA'
+    data_dir='./clutteredKIA'
     train_name_path = os.path.join(data_dir, 'Names', 'train.txt')
     train_names = [line.rstrip() for line in open(train_name_path, 'r')]
     if image_idx > (len(train_names)-1) :
@@ -226,6 +226,11 @@ def draw_rectangles(img ,bboxes ,scores , anchors, fname):
 
 def tracking_rpn_loss(summary_writer, loss, step):
     summary = tf.Summary(value=[tf.Summary.Value(tag='rpn_loss', simple_value=float(loss))])
+    summary_writer.add_summary(summary, step)
+
+
+def tracking_loss(summary_writer, loss, step, prefix ):
+    summary = tf.Summary(value=[tf.Summary.Value(tag='{}'.format(prefix), simple_value=float(loss))])
     summary_writer.add_summary(summary, step)
 
 

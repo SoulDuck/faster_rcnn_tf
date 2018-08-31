@@ -254,6 +254,9 @@ def bbox_transform_inv_py(boxes, deltas):
 
 
 def _inv_transform_layer_fastrcnn_py(rois , fast_rcnn_bbox):
+    if np.ndim(fast_rcnn_bbox) ==4 or np.ndim(fast_rcnn_bbox) ==3 :
+        fast_rcnn_bbox = np.reshape(fast_rcnn_bbox , np.shape(fast_rcnn_bbox)[-2:])
+    assert np.ndim(fast_rcnn_bbox) == 2
     proposals = bbox_transform_inv(rois , fast_rcnn_bbox)
     return proposals
 
@@ -261,6 +264,11 @@ def _inv_transform_layer_fastrcnn_py(rois , fast_rcnn_bbox):
 def inv_transform_layer_fastrcnn(rois , fast_rcnn_bbox):
     proposals = tf.py_func(_inv_transform_layer_fastrcnn_py , [ rois[:,1:] , fast_rcnn_bbox ] , [tf.float32])
     return proposals
+
+
+
+
+
 
 
 """
