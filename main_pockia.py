@@ -109,7 +109,6 @@ for i in range(0, max_iter):
         nms_keep = non_maximum_supression(fr_blobs_cls ,0.7)
 
         print 'before nms {} ==> after nms {}'.format(len(fr_blobs_cls) , len(nms_keep ))
-
         poc_acc(itr_fr_blobs[nms_keep],fr_cls[nms_keep], src_gt_boxes , 0.5)
 
 
