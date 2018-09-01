@@ -4,18 +4,21 @@ from proposal_target_layer import proposal_target_layer
 from utils import read_image , read_gtbboxes ,get_name , draw_rectangles_fastrcnn
 from anchor_target_layer import anchor_target
 from proposal_layer import inv_transform_layer_fastrcnn
+import fast_rcnn
 import math
 import numpy as np
 import tensorflow as tf
 import roi , glob , os
+
+
 # Settings placeholder and params
-rpn_eval = RPN_eval('rpn_models/model-24735', 64, anchor_scales=[24, 36, 50])
+rpn_eval = RPN_eval('models/{}-0', 64, anchor_scales=[24, 36, 50])
 n_classes = 19 + 1
 _feat_stride = rpn_eval.feat_stride
 anchor_scales=rpn_eval.anchor_scales
 # From RPN
 
-conv_h , conv_w  , conv_out = 12 ,20 , 128
+conv_h , conv_w  , conv_out = 12, 20 ,128
 n_anchor = 9
 top_conv_op = tf.placeholder(dtype = tf.float32 ,shape = [1,conv_h,conv_w,conv_out] ,name= 'top_conv_op')
 roi_cls_op = tf.placeholder(dtype = tf.float32  , shape = [1,conv_h,conv_w,n_anchor * 2] , name = 'rpn_cls_op')

@@ -47,7 +47,7 @@ def _proposal_layer_py(rpn_bbox_cls_prob, rpn_bbox_pred, im_dims, cfg_key, _feat
     # Only minibatch of 1 supported
     assert rpn_bbox_cls_prob.shape[0] == 1, \
         'Only single item batches are supported'
-    if cfg_key == 'TRAIN':
+    if cfg_key:
         pre_nms_topN = cfg.TRAIN.RPN_PRE_NMS_TOP_N #12000
         post_nms_topN = cfg.TRAIN.RPN_POST_NMS_TOP_N # 2000
         nms_thresh = cfg.TRAIN.RPN_NMS_THRESH #0.1
@@ -206,7 +206,6 @@ def _inv_transform_layer_py(rpn_bbox_pred,  is_training, _feat_stride, anchor_sc
     return proposals , target_proposals
 
 def inv_transform_layer(rpn_bbox_pred, cfg_key, _feat_stride, anchor_scales , indices):
-
     proposals, target_proposals = tf.py_func(_inv_transform_layer_py, [rpn_bbox_pred, cfg_key, _feat_stride, anchor_scales , indices],
                        [tf.float32 , tf.float32])
     proposals=tf.reshape(proposals , shape=[-1,4])

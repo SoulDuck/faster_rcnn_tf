@@ -62,10 +62,9 @@ def fast_rcnn(top_conv , sample_rois , rois , im_dims,num_classes , phase_train)
             layer = affine('fc_{}'.format(i), layer, FRCNN_FC_HIDDEN[i])
             # Dropout
             layer =tf.cond(phase_train, lambda: tf.nn.dropout(layer, keep_prob=FRCNN_DROPOUT_KEEP_RATE), lambda: layer)
-        with tf.variable_scope('cls'):
-            fast_rcnn_cls_logits = affine('cls_logits', layer, num_classes, activation=None)
-        with tf.variable_scope('bbox'):
-            fast_rcnn_bbox_logits = affine('bbox_logits', layer, num_classes * 4, activation=None)
+
+        fast_rcnn_cls_logits = affine('cls', layer, num_classes, activation=None)
+        fast_rcnn_bbox_logits = affine('targets', layer, num_classes * 4, activation=None)
     return fast_rcnn_cls_logits , fast_rcnn_bbox_logits
 
 def fast_rcnn_cls_loss(fast_rcnn_cls_score, labels):
