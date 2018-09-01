@@ -136,7 +136,6 @@ for i in range(0, max_iter):
         # fast bbox 중에 foreground 만 보여준다
         draw_fr_bboxes(src_img , nms_fr_cls , nms_itr_fr_blobs, (255,0,0) , 3 ,savepath = 'result_fastrcnn_roi/{}.png'.format(i) )
         rpn_bbox , =sess.run([rpn_bbox_pred], feed_dict)
-        exit()
         #
 # Training
     feed_dict = {x_: src_img, im_dims: src_im_dims, gt_boxes: src_gt_boxes, phase_train: True,
