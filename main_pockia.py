@@ -9,7 +9,7 @@ from proposal_target_layer import proposal_target_layer
 from fast_rcnn import fast_rcnn , fast_rcnn_bbox_loss , fast_rcnn_cls_loss , nms_fast_rcnn_blobs , get_interest_target
 import math
 import roi
-import sys
+import sys , time
 from mAP import poc_acc
 
 rpn_labels_op = tf.placeholder(dtype =tf.int32 , shape=[1,1,None,None])
@@ -75,11 +75,13 @@ saver = tf.train.Saver(max_to_keep=10)
 tb_writer = tf.summary.FileWriter('logs')
 tb_writer.add_graph(tf.get_default_graph())
 #
-max_iter = 485 * 100
+max_iter = 485 * 3000
 max_acc = 0
 
 # start Training
+start_time = time.time()
 for i in range(0, max_iter):
+
     src_img , src_gt_boxes = next_img_gtboxes(i)
     h,w,ch = np.shape(src_img)
     src_im_dims = [(h,w)]
@@ -92,7 +94,7 @@ for i in range(0, max_iter):
 
     indices=np.where([np.reshape(rpn_labels,[-1])>0])[1]
     src_img=src_img.reshape([1]+list(np.shape(src_img)))
-    if i % 100 == 0 :
+    if i % 16500 == 0 :
         feed_dict = {x_: src_img, im_dims: src_im_dims, gt_boxes: src_gt_boxes, phase_train: False,
                      rpn_labels_op: rpn_labels,
                      bbox_targets_op: bbox_targets,
@@ -106,13 +108,13 @@ for i in range(0, max_iter):
         itr_fr_blobs = np.squeeze(itr_fr_blobs)
         fr_cls = np.argmax(fr_cls , axis =1 ).reshape([-1,1])
         fr_blobs_cls = np.hstack([itr_fr_blobs, fr_cls])
-        nms_keep = non_maximum_supression(fr_blobs_cls ,0.7)
+        nms_keep = non_maximum_supression(fr_blobs_cls ,0.5)
         print 'before nms {} ==> after nms {}'.format(len(fr_blobs_cls) , len(nms_keep ))
         nms_itr_fr_blobs=itr_fr_blobs[nms_keep]
         nms_fr_cls = fr_cls[nms_keep]
         acc = poc_acc(nms_itr_fr_blobs,nms_fr_cls , src_gt_boxes , 0.5)
         # model save
-        saver.save(sess , save_path = 'models/{}' , global_step= i)
+        saver.save(sess , save_path = 'models/{model}'.format(i) , global_step= i)
         # save box
         # fast bbox 중에 foreground 만 보여준다
         draw_fr_bboxes(src_img , nms_fr_cls , nms_itr_fr_blobs, (255,0,0) , 3 ,savepath = 'result_fastrcnn_roi/{}.png'.format(i) )
@@ -143,3 +145,5 @@ for i in range(0, max_iter):
     tracking_loss(tb_writer, fr_bbox_loss, i, 'fast rcnn bbox loss')
 
 
+end_time = time.time() - start_time
+print 'Time Consume : {}'.format(end_time)

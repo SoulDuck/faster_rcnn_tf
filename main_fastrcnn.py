@@ -63,8 +63,6 @@ if __name__ == '__main__':
         roi_bbox =np.load('rpn_bbox_caches/{}.npy'.format(name))
         roi_cls = np.load('rpn_cls_caches/{}.npy'.format(name))
         top_conv = np.load('topconv_caches/{}.npy'.format(name))
-
-
         rpn_cls_score = np.zeros([1, int(math.ceil(h / float(_feat_stride))),
                                   int(math.ceil(w / float(_feat_stride))), 512])
         rpn_labels, rpn_bbox_targets, rpn_bbox_inside_weights, rpn_bbox_outside_weights, bbox_targets, bbox_inside_weights, bbox_outside_weights = anchor_target(
