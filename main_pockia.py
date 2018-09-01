@@ -75,7 +75,7 @@ saver = tf.train.Saver(max_to_keep=10)
 tb_writer = tf.summary.FileWriter('logs')
 tb_writer.add_graph(tf.get_default_graph())
 #
-max_iter = 485 * 3000
+max_iter = 16500 * 50
 max_acc = 0
 
 # start Training
