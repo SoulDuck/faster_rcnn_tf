@@ -108,12 +108,20 @@ for i in range(0, max_iter):
         fr_blobs_cls = np.hstack([itr_fr_blobs, fr_cls])
         nms_keep = non_maximum_supression(fr_blobs_cls ,0.7)
         print 'before nms {} ==> after nms {}'.format(len(fr_blobs_cls) , len(nms_keep ))
-        acc = poc_acc(itr_fr_blobs[nms_keep],fr_cls[nms_keep], src_gt_boxes , 0.5)
+        nms_itr_fr_blobs=itr_fr_blobs[nms_keep]
+        nms_fr_cls = fr_cls[nms_keep]
+        acc = poc_acc(nms_itr_fr_blobs,nms_fr_cls , src_gt_boxes , 0.5)
         # model save
         saver.save(sess , save_path = 'models/{}' , global_step= i)
         # save box
         # fast bbox 중에 foreground 만 보여준다
-        draw_fr_bboxes(src_img , fr_cls , itr_fr_blobs , (255,0,0) , 3 ,savepath = 'result_fastrcnn_roi/{}.png'.format(i) )
+        draw_fr_bboxes(src_img , nms_fr_cls , nms_itr_fr_blobs, (255,0,0) , 3 ,savepath = 'result_fastrcnn_roi/{}.png'.format(i) )
+        import matplotlib.pyplot as plt
+        print 'a'
+        plt.imshow(np.squeeze(src_img))
+        plt.show()
+        exit()
+
 
 
 # Training

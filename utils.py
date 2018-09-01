@@ -255,13 +255,15 @@ def get_name(path):
     return name
 
 def draw_fr_bboxes(img , fastrcnn_cls , fastrcnn_bboxes , color , linewidth  , savepath):
-    img=np.asarray(img)
     img=np.squeeze(img)
+    img=np.asarray(img)*255
     for i, bbox in enumerate(fastrcnn_bboxes):
-        cls = fastrcnn_cls[i]
+        cls = fastrcnn_cls[i][0]
+        if cls ==0 :
+            continue;
         font = cv2.FONT_HERSHEY_SIMPLEX
         x1,y1,x2,y2 = bbox
-        cv2.putText(img , '{}'.format(cls) ,(x1,y1) ,font ,2 ,color)
+        cv2.putText(img , '{}'.format(cls) ,(x1,y1) ,font ,1 ,color)
         cv2.rectangle(img , (x1,y1) , (x2-x1,y2-y1) , color ,linewidth )
     cv2.imwrite(savepath, img)
 
