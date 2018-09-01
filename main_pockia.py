@@ -114,7 +114,7 @@ for i in range(0, max_iter):
         nms_fr_cls = fr_cls[nms_keep]
         acc = poc_acc(nms_itr_fr_blobs,nms_fr_cls , src_gt_boxes , 0.5)
         # model save
-        saver.save(sess , save_path = 'models/{model}'.format(i) , global_step= i)
+        saver.save(sess , save_path = 'models/{}'.format('model') , global_step= i)
         # save box
         # fast bbox 중에 foreground 만 보여준다
         draw_fr_bboxes(src_img , nms_fr_cls , nms_itr_fr_blobs, (255,0,0) , 3 ,savepath = 'result_fastrcnn_roi/{}.png'.format(i) )
