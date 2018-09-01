@@ -122,7 +122,6 @@ for i in range(0, max_iter):
             [fast_rcnn_cls_logits , fast_rcnn_bbox_logits , roi_scores_op ,roi_blobs_op ,itr_fr_blobs_op ] , feed_dict)
         #
         itr_fr_blobs = np.squeeze(itr_fr_blobs)
-        print itr_fr_blobs[:10]
         fr_cls = np.argmax(fr_cls , axis =1 ).reshape([-1,1])
         fr_blobs_cls = np.hstack([itr_fr_blobs, fr_cls])
         nms_keep = non_maximum_supression(fr_blobs_cls ,0.5)
