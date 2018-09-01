@@ -264,7 +264,7 @@ def draw_fr_bboxes(img , fastrcnn_cls , fastrcnn_bboxes , color , linewidth  , s
         font = cv2.FONT_HERSHEY_SIMPLEX
         x1,y1,x2,y2 = bbox
         cv2.putText(img , '{}'.format(cls) ,(x1,y1) ,font ,1 ,color)
-        cv2.rectangle(img , (x1,y1) , (x2-x1,y2-y1) , color ,linewidth )
+        cv2.rectangle(img , (x1,y1) , (x2,y2) , color ,linewidth )
     cv2.imwrite(savepath, img)
 
 
