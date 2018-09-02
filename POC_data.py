@@ -6,13 +6,13 @@ import cv2
 import numpy as np
 class Poc_datum(object):
     def __init__(self , label_path , images_dir , image_ext = 'jpg'):
-        self.root_dir = 'clutteredPOCKIA'
+        self.root_dir = 'clutteredPOCKIA_TEST'
         self.label_path = label_path
         self.img_dirpath = images_dir
         self.img_paths = glob.glob(os.path.join(self.img_dirpath , '*.{}'.format(image_ext)))
         # Get labels
         self.poc_labels_dict = self._arrange_labels()
-        self.show_label_and_images()
+        #self.show_label_and_images()
         self._count_labels()
         # clutteredPOCKIA folder 및 sub folder 을 생성합니다. 그리고 해당 형식에 맞게 저장합니다
         self.error_indices = self._create_clutteredPOCKIA()
@@ -182,8 +182,8 @@ if __name__ == '__main__':
     parser.add_argument('--images_dir' , type = str)
     args = parser.parse_args()
 
-    poc_label_path = './clutteredPOCKIA/poc_labels.txt' #args.label_path
-    poc_images_dir = './clutteredPOCKIA/Images/' #args.images_dir
+    poc_label_path = './clutteredPOCKIA_TEST/poc_labels.txt' #args.label_path
+    poc_images_dir = './clutteredPOCKIA_TEST/Images/' #args.images_dir
     poc_datum = Poc_datum(poc_label_path , poc_images_dir)
 
 
