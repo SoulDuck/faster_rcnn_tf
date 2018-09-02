@@ -24,7 +24,6 @@ def next_img_gtboxes(image_idx):
 
 
     img_path = os.path.join(data_dir, 'Images', train_names[image_idx] + IMAGE_FORMAT)
-    print img_path
     annotation_path = os.path.join(data_dir, 'Annotations', train_names[image_idx] + '.txt')
     img = Image.open(img_path).convert('RGB')
     img=np.asarray(img)
@@ -39,6 +38,33 @@ def next_img_gtboxes(image_idx):
     if np.max(img) > 1:
         img = img / 255.
     return img , gt_bbox
+
+
+def next_img_gtboxes_with_path(image_idx):
+    IMAGE_FORMAT= '.jpg'
+    data_dir='./clutteredPOCKIA_TEST'
+    train_name_path = os.path.join(data_dir, 'Names', 'train.txt')
+    train_names = [line.rstrip() for line in open(train_name_path, 'r')]
+    if image_idx > (len(train_names)-1) :
+        image_idx= image_idx % (len(train_names)-1)
+
+
+    img_path = os.path.join(data_dir, 'Images', train_names[image_idx] + IMAGE_FORMAT)
+    annotation_path = os.path.join(data_dir, 'Annotations', train_names[image_idx] + '.txt')
+    img = Image.open(img_path).convert('RGB')
+    img=np.asarray(img)
+    #img = imread(img_path)
+
+    gt_bbox = np.loadtxt(annotation_path, ndmin=2)
+    #im_dims = np.array(img.shape[:2]).reshape([1, 2])
+
+    flips = [0, 0]
+    flips[0] = np.random.binomial(1, 0.5)
+    #img = image_preprocessing.image_preprocessing(img)
+    if np.max(img) > 1:
+        img = img / 255.
+    return img , gt_bbox , img_path
+
 def non_maximum_supression(dets, thresh):
     x1 = dets[:, 0]
     y1 = dets[:, 1]
@@ -267,13 +293,6 @@ def draw_fr_bboxes(img , fastrcnn_cls , fastrcnn_bboxes , color , linewidth  , s
         cv2.putText(img , '{}'.format(cls) ,(x1,y1) ,font ,1 ,color)
         cv2.rectangle(img , (x1,y1) , (x2,y2) , color ,linewidth )
     cv2.imwrite(savepath, img)
-
-
-
-
-def
-
-
 
 
 if '__main__' == __name__:

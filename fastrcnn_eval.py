@@ -13,7 +13,7 @@ from proposal_layer import inv_transform_layer , inv_transform_layer_fastrcnn
 import glob , os
 from proposal_target_layer import proposal_target_layer
 from fast_rcnn import fast_rcnn , get_interest_target
-from utils import draw_fr_bboxes
+from utils import draw_fr_bboxes ,next_img_gtboxes_with_path
 
 model_path = 'models/759000-759000'
 sess = tf.Session()
@@ -68,38 +68,39 @@ itr_fr_blobs_op = inv_transform_layer_fastrcnn( roi_blobs_op, itr_fr_bbox_target
 
 
 if __name__ == '__main__':
+    for i in range(4058):
+        src_img , src_gt_boxes , path  = next_img_gtboxes_with_path(i)
 
-    src_img , src_gt_boxes = next_img_gtboxes(0)
-    h, w, ch = np.shape(src_img)
-    src_im_dims = [(h, w)]
-    src_img = src_img.reshape([1] + list(np.shape(src_img)))
-    src_img = src_img
-    #
-    anchor_scales = [24, 36, 50]
-    strides = [2, 2, 2, 2, 2, 2]
-    _feat_stride = np.prod(strides)
-    rpn_cls_score = np.zeros([1, int(math.ceil(h / float(_feat_stride))),
-                              int(math.ceil(w / float(_feat_stride))), 512])
-    rpn_labels, rpn_bbox_targets, rpn_bbox_inside_weights, rpn_bbox_outside_weights, bbox_targets, bbox_inside_weights, bbox_outside_weights = anchor_target(
-        rpn_cls_score=rpn_cls_score, gt_boxes=src_gt_boxes, im_dims=src_im_dims, _feat_stride=_feat_stride,
-        anchor_scales=anchor_scales)
-    indices=np.where([np.reshape(rpn_labels,[-1])>0])[1]
-    feed_dict = {x_: src_img, im_dims: src_im_dims, gt_boxes: src_gt_boxes, phase_train: False , feat_stride_ : _feat_stride , anchor_scales_ : anchor_scales ,
-                 rpn_label_op: rpn_labels ,  rpn_bbox_targets_op : rpn_bbox_targets , rpn_bbox_inside_weights_op : rpn_bbox_inside_weights ,
-                 rpn_bbox_outside_weights_op : rpn_bbox_outside_weights ,indice_op: indices  ,
-                 bbox_targets_op : bbox_targets , bbox_inside_weights_op : bbox_inside_weights , bbox_outside_weights_op : bbox_outside_weights}
-    fetches = [ fr_bboxes_op , fr_cls_op  ,itr_fr_blobs_op ]#inv_blobs_op
-    fr_bboxes , fr_cls , itr_fr_blobs= sess.run(fetches , feed_dict)
-    itr_fr_blobs=np.squeeze(itr_fr_blobs)
-    print itr_fr_blobs[:10]
-    fr_cls = np.argmax(fr_cls, axis=1).reshape([-1, 1])
-    fr_blobs_cls = np.hstack([itr_fr_blobs, fr_cls])
-    nms_keep = non_maximum_supression(fr_blobs_cls, 0.5)
-    print 'before nms {} ==> after nms {}'.format(len(fr_blobs_cls), len(nms_keep))
-    nms_itr_fr_blobs = itr_fr_blobs[nms_keep]
-    nms_fr_cls = fr_cls[nms_keep]
-    draw_fr_bboxes(src_img, nms_fr_cls, nms_itr_fr_blobs, (255, 0, 0), 3,
-                   savepath='result_test_images/{}.png'.format(0))
+        h, w, ch = np.shape(src_img)
+        src_im_dims = [(h, w)]
+        src_img = src_img.reshape([1] + list(np.shape(src_img)))
+        src_img = src_img
+        #
+        anchor_scales = [24, 36, 50]
+        strides = [2, 2, 2, 2, 2, 2]
+        _feat_stride = np.prod(strides)
+        rpn_cls_score = np.zeros([1, int(math.ceil(h / float(_feat_stride))),
+                                  int(math.ceil(w / float(_feat_stride))), 512])
+        rpn_labels, rpn_bbox_targets, rpn_bbox_inside_weights, rpn_bbox_outside_weights, bbox_targets, bbox_inside_weights, bbox_outside_weights = anchor_target(
+            rpn_cls_score=rpn_cls_score, gt_boxes=src_gt_boxes, im_dims=src_im_dims, _feat_stride=_feat_stride,
+            anchor_scales=anchor_scales)
+        indices=np.where([np.reshape(rpn_labels,[-1])>0])[1]
+        feed_dict = {x_: src_img, im_dims: src_im_dims, gt_boxes: src_gt_boxes, phase_train: False , feat_stride_ : _feat_stride , anchor_scales_ : anchor_scales ,
+                     rpn_label_op: rpn_labels ,  rpn_bbox_targets_op : rpn_bbox_targets , rpn_bbox_inside_weights_op : rpn_bbox_inside_weights ,
+                     rpn_bbox_outside_weights_op : rpn_bbox_outside_weights ,indice_op: indices  ,
+                     bbox_targets_op : bbox_targets , bbox_inside_weights_op : bbox_inside_weights , bbox_outside_weights_op : bbox_outside_weights}
+        fetches = [ fr_bboxes_op , fr_cls_op  ,itr_fr_blobs_op ]#inv_blobs_op
+        fr_bboxes , fr_cls , itr_fr_blobs= sess.run(fetches , feed_dict)
+        itr_fr_blobs=np.squeeze(itr_fr_blobs)
+        print itr_fr_blobs[:10]
+        fr_cls = np.argmax(fr_cls, axis=1).reshape([-1, 1])
+        fr_blobs_cls = np.hstack([itr_fr_blobs, fr_cls])
+        nms_keep = non_maximum_supression(fr_blobs_cls, 0.5)
+        print 'before nms {} ==> after nms {}'.format(len(fr_blobs_cls), len(nms_keep))
+        nms_itr_fr_blobs = itr_fr_blobs[nms_keep]
+        nms_fr_cls = fr_cls[nms_keep]
+        draw_fr_bboxes(src_img, nms_fr_cls, nms_itr_fr_blobs, (255, 0, 0), 3,
+                       savepath='result_test_images/{}.png'.format(0))
 """
 
 [[ 1211.35754395   209.34394836  1279.62561035   291.44747925]
