@@ -97,7 +97,7 @@ if __name__ == '__main__':
         print itr_fr_blobs[:10]
         fr_cls = np.argmax(fr_cls, axis=1).reshape([-1, 1])
         fr_blobs_cls = np.hstack([itr_fr_blobs, fr_cls])
-        nms_keep = non_maximum_supression(fr_blobs_cls, 0.5)
+        nms_keep = non_maximum_supression(fr_blobs_cls, 0.1)
         print 'before nms {} ==> after nms {}'.format(len(fr_blobs_cls), len(nms_keep))
         nms_itr_fr_blobs = itr_fr_blobs[nms_keep]
         nms_fr_cls = fr_cls[nms_keep]
