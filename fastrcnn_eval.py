@@ -97,7 +97,8 @@ if __name__ == '__main__':
         print 'before nms {} ==> after nms {}'.format(len(fr_blobs_cls), len(nms_keep))
         nms_itr_fr_blobs = itr_fr_blobs[nms_keep]
         nms_fr_cls = fr_cls[nms_keep]
-        print nms_fr_cls
+
+        nms_fr_cls = np.reshape(nms_fr_cls ,[-1])
         print np.where([nms_fr_cls != 0])
         exit()
 
