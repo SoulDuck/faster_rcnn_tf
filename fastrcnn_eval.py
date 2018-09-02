@@ -70,6 +70,7 @@ itr_fr_blobs_op = inv_transform_layer_fastrcnn( roi_blobs_op, itr_fr_bbox_target
 if __name__ == '__main__':
     for i in range(4058):
         src_img , src_gt_boxes , path  = next_img_gtboxes_with_path(i)
+        name=os.path.split(path)[-1]
 
         h, w, ch = np.shape(src_img)
         src_im_dims = [(h, w)]
@@ -100,7 +101,7 @@ if __name__ == '__main__':
         nms_itr_fr_blobs = itr_fr_blobs[nms_keep]
         nms_fr_cls = fr_cls[nms_keep]
         draw_fr_bboxes(src_img, nms_fr_cls, nms_itr_fr_blobs, (255, 0, 0), 3,
-                       savepath='result_test_images/{}.png'.format(0))
+                       savepath='result_test_images/{}'.format(name))
 """
 
 [[ 1211.35754395   209.34394836  1279.62561035   291.44747925]
