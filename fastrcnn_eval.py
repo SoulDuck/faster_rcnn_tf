@@ -98,6 +98,7 @@ if __name__ == '__main__':
         nms_itr_fr_blobs = itr_fr_blobs[nms_keep]
         nms_fr_cls = fr_cls[nms_keep]
         print nms_fr_cls
+        print np.where([nms_fr_cls != 0])
         exit()
 
         draw_fr_bboxes(src_img, nms_fr_cls, nms_itr_fr_blobs, (255, 0, 0), 3,
