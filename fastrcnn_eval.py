@@ -90,6 +90,7 @@ if __name__ == '__main__':
                      bbox_targets_op : bbox_targets , bbox_inside_weights_op : bbox_inside_weights , bbox_outside_weights_op : bbox_outside_weights}
         fetches = [ fr_bboxes_op , fr_cls_op  ,itr_fr_blobs_op ]#inv_blobs_op
         fr_bboxes , fr_cls , itr_fr_blobs= sess.run(fetches , feed_dict)
+        print fr_cls
         itr_fr_blobs=np.squeeze(itr_fr_blobs)
         fr_cls = np.argmax(fr_cls, axis=1).reshape([-1, 1])
         fr_blobs_cls = np.hstack([itr_fr_blobs, fr_cls])
@@ -97,10 +98,10 @@ if __name__ == '__main__':
         print 'before nms {} ==> after nms {}'.format(len(fr_blobs_cls), len(nms_keep))
         nms_itr_fr_blobs = itr_fr_blobs[nms_keep]
         nms_fr_cls = fr_cls[nms_keep]
-
-        nms_fr_cls = np.reshape(nms_fr_cls ,[-1])
-        print np.where([nms_fr_cls != 0])[1]
         exit()
+
+
+
 
         draw_fr_bboxes(src_img, nms_fr_cls, nms_itr_fr_blobs, (255, 0, 0), 3,
                        savepath='result_test_images/{}'.format(name))

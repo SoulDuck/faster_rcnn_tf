@@ -295,6 +295,9 @@ def draw_fr_bboxes(img , fastrcnn_cls , fastrcnn_bboxes , color , linewidth  , s
     cv2.imwrite(savepath, img)
 
 
+#def best_rect(cls , bboxes):
+
+
 if '__main__' == __name__:
     img , gt_boxes =next_img_gtboxes(image_idx=1)
     ax=plt.axes()
