@@ -72,7 +72,6 @@ if __name__ == '__main__':
         src_img , src_gt_boxes , path  = next_img_gtboxes_with_path(i)
         name=os.path.split(path)[-1]
         print name
-
         h, w, ch = np.shape(src_img)
         src_im_dims = [(h, w)]
         src_img = src_img.reshape([1] + list(np.shape(src_img)))
@@ -94,7 +93,6 @@ if __name__ == '__main__':
         fetches = [ fr_bboxes_op , fr_cls_op  ,itr_fr_blobs_op ]#inv_blobs_op
         fr_bboxes , fr_cls , itr_fr_blobs= sess.run(fetches , feed_dict)
         itr_fr_blobs=np.squeeze(itr_fr_blobs)
-        print itr_fr_blobs[:10]
         fr_cls = np.argmax(fr_cls, axis=1).reshape([-1, 1])
         fr_blobs_cls = np.hstack([itr_fr_blobs, fr_cls])
         nms_keep = non_maximum_supression(fr_blobs_cls, 0.1)
