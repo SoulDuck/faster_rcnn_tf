@@ -71,6 +71,7 @@ if __name__ == '__main__':
     for i in range(4058):
         src_img , src_gt_boxes , path  = next_img_gtboxes_with_path(i)
         name=os.path.split(path)[-1]
+        print name
 
         h, w, ch = np.shape(src_img)
         src_im_dims = [(h, w)]
