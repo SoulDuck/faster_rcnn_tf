@@ -91,8 +91,8 @@ if __name__ == '__main__':
         fetches = [ fr_bboxes_op , fr_cls_op  ,itr_fr_blobs_op ]#inv_blobs_op
         fr_bboxes , fr_cls , itr_fr_blobs= sess.run(fetches , feed_dict)
         itr_fr_blobs=np.squeeze(itr_fr_blobs)
-        fr_cls = np.argmax(fr_cls, axis=1).reshape([-1, 1])
         fr_score = np.max(fr_cls, axis=1).reshape([-1, 1])
+        fr_cls = np.argmax(fr_cls, axis=1).reshape([-1, 1])
         print fr_score
         fr_blobs_cls = np.hstack([itr_fr_blobs, fr_cls])
         nms_keep = non_maximum_supression(fr_blobs_cls, 0.01)
