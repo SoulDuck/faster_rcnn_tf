@@ -99,7 +99,7 @@ if __name__ == '__main__':
         nms_fr_cls = fr_cls[nms_keep]
 
         nms_fr_cls = np.reshape(nms_fr_cls ,[-1])
-        print np.where([nms_fr_cls != 0])
+        print np.where([nms_fr_cls != 0])[1]
         exit()
 
         draw_fr_bboxes(src_img, nms_fr_cls, nms_itr_fr_blobs, (255, 0, 0), 3,
