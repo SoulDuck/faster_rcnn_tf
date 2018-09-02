@@ -16,7 +16,7 @@ def progress(i, max_step):
     sys.stdout.flush()
 def next_img_gtboxes(image_idx):
     IMAGE_FORMAT= '.jpg'
-    data_dir='./clutteredPOCKIA'
+    data_dir='./clutteredPOCKIA_TEST'
     train_name_path = os.path.join(data_dir, 'Names', 'train.txt')
     train_names = [line.rstrip() for line in open(train_name_path, 'r')]
     if image_idx > (len(train_names)-1) :
@@ -24,6 +24,7 @@ def next_img_gtboxes(image_idx):
 
 
     img_path = os.path.join(data_dir, 'Images', train_names[image_idx] + IMAGE_FORMAT)
+    print img_path
     annotation_path = os.path.join(data_dir, 'Annotations', train_names[image_idx] + '.txt')
     img = Image.open(img_path).convert('RGB')
     img=np.asarray(img)
@@ -269,6 +270,8 @@ def draw_fr_bboxes(img , fastrcnn_cls , fastrcnn_bboxes , color , linewidth  , s
 
 
 
+
+def
 
 
 

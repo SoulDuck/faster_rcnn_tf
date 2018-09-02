@@ -69,8 +69,6 @@ itr_fr_blobs_op = inv_transform_layer_fastrcnn( roi_blobs_op, itr_fr_bbox_target
 
 if __name__ == '__main__':
 
-    test_paths =glob.glob(os.path.join('test_images', '*.jpg'))
-
     src_img , src_gt_boxes = next_img_gtboxes(0)
     h, w, ch = np.shape(src_img)
     src_im_dims = [(h, w)]
