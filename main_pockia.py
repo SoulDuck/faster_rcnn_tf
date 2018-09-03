@@ -91,9 +91,9 @@ tb_writer.add_graph(tf.get_default_graph())
 #
 max_iter = 485 * 3000
 max_acc = 0
-
 # start Training
 start_time = time.time()
+
 for i in range(0, max_iter):
 
     src_img , src_gt_boxes = next_img_gtboxes(i)

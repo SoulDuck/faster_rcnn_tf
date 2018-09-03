@@ -1,3 +1,4 @@
+#-*- coding:utf-8 -*_
 import os
 from scipy.misc import imread
 from PIL import  Image
@@ -10,13 +11,14 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import cv2
+import glob
 def progress(i, max_step):
     msg = '\r {} / {}'.format(i, max_step)
     sys.stdout.write(msg)
     sys.stdout.flush()
 def next_img_gtboxes(image_idx):
     IMAGE_FORMAT= '.jpg'
-    data_dir='./clutteredPOCKIA_TEST'
+    data_dir='./clutteredPOCKIA_TRAIN'
     train_name_path = os.path.join(data_dir, 'Names', 'train.txt')
     train_names = [line.rstrip() for line in open(train_name_path, 'r')]
     if image_idx > (len(train_names)-1) :
@@ -295,8 +297,41 @@ def draw_fr_bboxes(img , fastrcnn_cls , fastrcnn_bboxes , color , linewidth  , s
     cv2.imwrite(savepath, img)
 
 
-#def best_rect(cls , bboxes):
+def best_rect(scores , bboxes):
+    # 이 메스드는 반드시 버튼이 동시에 여러개 없다는 가정이 있어야 한다는 조건이 있다
+    cls = np.argmax(scores , axis =1 )
+    fg_dict = {} # key : classs values : scores
+    for i,c in enumerate(cls):
+        if c ==0 :
+            continue
+        else:
+            if not c in fg_dict.keys():
+                fg_dict[c] = [(i,scores[i] , bboxes[i])]
+            else:
+                fg_dict[c].append((i,scores[i] ,bboxes[i]))
 
+    return fg_dict
+
+def read_gtbboxes(label_path):
+    # poc_label.txt 을 dict 형태로 return 한다 .
+
+    f=open(label_path  , 'r')
+    lines=f.readlines()
+    ret_gtbboxes={}
+    for l in lines:
+        tmp_list = []
+        elements = l.split(',')
+        img_name = elements[0]
+        n_labels = elements[1]
+
+        for n in range(int(n_labels)):
+            x,y,w,h ,btn = elements[2+n*5 :2+(n+1)*5 ]
+            btn=btn.replace('button', '')
+            x, y, w, h, btn = map(int, [x, y, w, h, btn])
+            tmp_list.append([x, y, w+x, h+y, btn])
+        ret_gtbboxes[img_name] = np.asarray(tmp_list)
+    assert len(ret_gtbboxes) == len(lines)
+    return ret_gtbboxes
 
 if '__main__' == __name__:
     img , gt_boxes =next_img_gtboxes(image_idx=1)
@@ -307,6 +342,3 @@ if '__main__' == __name__:
         ax.add_patch(rect)
     plt.imshow(img)
     plt.show()
-
-
-

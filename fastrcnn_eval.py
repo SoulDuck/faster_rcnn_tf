@@ -13,9 +13,9 @@ from proposal_layer import inv_transform_layer , inv_transform_layer_fastrcnn
 import glob , os
 from proposal_target_layer import proposal_target_layer
 from fast_rcnn import fast_rcnn , get_interest_target
-from utils import draw_fr_bboxes ,next_img_gtboxes_with_path
+from utils import draw_fr_bboxes ,next_img_gtboxes_with_path , best_rect , read_gtbboxes
 
-model_path = 'models/759000-759000'
+model_path = 'models/0-0'
 sess = tf.Session()
 saver = tf.train.import_meta_graph(
     meta_graph_or_file=model_path + '.meta', )  # example model path ./models/fundus_300/5/model_1.ckpt
@@ -64,22 +64,27 @@ itr_fr_bbox_target_op = get_interest_target(tf.argmax(fr_cls_op , axis =1), fr_b
 #
 itr_fr_blobs_op = inv_transform_layer_fastrcnn( roi_blobs_op, itr_fr_bbox_target_op  )
 #
-
-
 if __name__ == '__main__':
-    for i in range(4058):
-        src_img , src_gt_boxes , path  = next_img_gtboxes_with_path(i)
+    img_paths = glob.glob('./clutteredPOCKIA_TEST/Images/*.jpg')
+    labels = read_gtbboxes('./clutteredPOCKIA_TEST/poc_labels.txt')
+    for path in img_paths :
+        # get Image
         name=os.path.split(path)[-1]
-        h, w, ch = np.shape(src_img)
+        img = np.asarray(Image.open(path).convert('RGB'))
+        src_img = img.reshape([1]+list(np.shape(img))) / 255.
+        # get bboxes
+        src_gt_boxes = labels[name]
+        # Image Info
+        n,h, w, ch = np.shape(src_img)
+        #
         src_im_dims = [(h, w)]
-        src_img = src_img.reshape([1] + list(np.shape(src_img)))
-        src_img = src_img
         #
         anchor_scales = [24, 36, 50]
         strides = [2, 2, 2, 2, 2, 2]
         _feat_stride = np.prod(strides)
         rpn_cls_score = np.zeros([1, int(math.ceil(h / float(_feat_stride))),
                                   int(math.ceil(w / float(_feat_stride))), 512])
+        #
         rpn_labels, rpn_bbox_targets, rpn_bbox_inside_weights, rpn_bbox_outside_weights, bbox_targets, bbox_inside_weights, bbox_outside_weights = anchor_target(
             rpn_cls_score=rpn_cls_score, gt_boxes=src_gt_boxes, im_dims=src_im_dims, _feat_stride=_feat_stride,
             anchor_scales=anchor_scales)
@@ -93,21 +98,17 @@ if __name__ == '__main__':
         itr_fr_blobs=np.squeeze(itr_fr_blobs)
         fr_score = np.max(fr_cls, axis=1).reshape([-1, 1])
         fr_cls = np.argmax(fr_cls, axis=1).reshape([-1, 1])
-        print fr_score
         fr_blobs_cls = np.hstack([itr_fr_blobs, fr_cls])
         nms_keep = non_maximum_supression(fr_blobs_cls, 0.01)
         print 'before nms {} ==> after nms {}'.format(len(fr_blobs_cls), len(nms_keep))
         nms_itr_fr_blobs = itr_fr_blobs[nms_keep]
         nms_fr_cls = fr_cls[nms_keep]
+        nms_fr_score = fr_score[nms_keep]
 
-        exit()
-
-
-
-
+        best_candidates = best_rect(nms_fr_score  , nms_itr_fr_blobs)
+        print best_candidates
         draw_fr_bboxes(src_img, nms_fr_cls, nms_itr_fr_blobs, (255, 0, 0), 3,
                        savepath='result_test_images/{}'.format(name))
-
 
 """
 

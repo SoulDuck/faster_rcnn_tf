@@ -6,7 +6,7 @@ import cv2
 import numpy as np
 class Poc_datum(object):
     def __init__(self , label_path , images_dir , image_ext = 'jpg'):
-        self.root_dir = 'clutteredPOCKIA_TEST'
+        self.root_dir = 'clutteredPOCKIA_TRAIN'
         self.label_path = label_path
         self.img_dirpath = images_dir
         self.img_paths = glob.glob(os.path.join(self.img_dirpath , '*.{}'.format(image_ext)))
@@ -24,7 +24,6 @@ class Poc_datum(object):
 
         assert len(self.img_paths) == len(self.poc_labels_dict), '# image paths : {} , # labels : {}'.format(
             len(self.img_paths), len(self.poc_labels_dict))
-
 
     def _arrange_labels(self):
         # 보기 쉽게 라벨을 dictionary 형태로 정리합니다
@@ -182,8 +181,8 @@ if __name__ == '__main__':
     parser.add_argument('--images_dir' , type = str)
     args = parser.parse_args()
 
-    poc_label_path = './clutteredPOCKIA_TEST/poc_labels.txt' #args.label_path
-    poc_images_dir = './clutteredPOCKIA_TEST/Images/' #args.images_dir
+    poc_label_path = './clutteredPOCKIA_TRAIN/poc_labels.txt' #args.label_path
+    poc_images_dir = './clutteredPOCKIA_TRAIN/Images/' #args.images_dir
     poc_datum = Poc_datum(poc_label_path , poc_images_dir)
 
 
