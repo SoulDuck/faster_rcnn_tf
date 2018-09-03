@@ -110,6 +110,7 @@ if __name__ == '__main__':
         draw_fr_bboxes(src_img, nms_fr_cls, nms_itr_fr_blobs, (255, 0, 0), 3,
                        savepath='result_test_images/{}'.format(name))
 
+
 """
 
 [[ 1211.35754395   209.34394836  1279.62561035   291.44747925]

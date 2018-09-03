@@ -300,6 +300,7 @@ def draw_fr_bboxes(img , fastrcnn_cls , fastrcnn_bboxes , color , linewidth  , s
 def best_rect(scores , bboxes):
     # 이 메스드는 반드시 버튼이 동시에 여러개 없다는 가정이 있어야 한다는 조건이 있다
     cls = np.argmax(scores , axis =1 )
+    print cls
     fg_dict = {} # key : classs values : scores
     for i,c in enumerate(cls):
         if c ==0 :
