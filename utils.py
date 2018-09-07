@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 import cv2
 import glob
+import numpy as np
 def progress(i, max_step):
     msg = '\r {} / {}'.format(i, max_step)
     sys.stdout.write(msg)
@@ -287,6 +288,7 @@ def draw_fr_bboxes(img , fastrcnn_cls , fastrcnn_bboxes , color , linewidth  , s
     img=np.squeeze(img)
     img=np.asarray(img)*255
     for i, bbox in enumerate(fastrcnn_bboxes):
+
         cls = fastrcnn_cls[i][0]
         if cls ==0 :
             continue;
@@ -298,18 +300,42 @@ def draw_fr_bboxes(img , fastrcnn_cls , fastrcnn_bboxes , color , linewidth  , s
 
 
 def best_rect(cls , scores , bboxes):
+    assert len(cls) == len(scores) == len(bboxes)
     # 이 메스드는 반드시 버튼이 동시에 여러개 없다는 가정이 있어야 한다는 조건이 있다
+    best_scores = []
+    best_bboxes = []
+    best_cls = []
     fg_dict = {} # key : classs values : scores
     for i,c in enumerate(cls):
         if c ==0 :
             continue
         else:
             if not c in fg_dict.keys():
-                fg_dict[c] = [(i,scores[i] , bboxes[i])]
+                fg_dict[c] = [i,scores[i] , bboxes[i]]
             else:
-                fg_dict[c].append((i,scores[i] ,bboxes[i]))
+                old_score = fg_dict[c][1]
+                new_score = scores[i]
+                if old_score < new_score:
+                    print 'old score : {} new score : {}'.format(old_score , new_score)
+                    fg_dict[c] = [i,scores[i] , bboxes[i]]
 
-    return fg_dict
+    print 'N classes : {} '.format(len(fg_dict))
+    for cls in fg_dict.keys():
+        best_cls.append(cls)
+        i,score , bboxes = fg_dict[cls]
+
+        best_bboxes.append([bboxes])
+        best_scores.append(score)
+    assert len(best_cls) == len(best_scores) == len(best_bboxes) , '{} {} {}'\
+        .format(len(best_cls) ,len(best_scores) ,len(best_bboxes))
+    best_cls, best_scores, best_bboxes = map(np.asarray,[best_cls , best_scores , best_bboxes])
+    best_bboxes=np.reshape(best_bboxes , [-1,4])
+    return best_cls , best_scores , best_bboxes
+
+
+
+
+
 
 def read_gtbboxes(label_path):
     # poc_label.txt 을 dict 형태로 return 한다 .

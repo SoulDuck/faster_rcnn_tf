@@ -15,7 +15,7 @@ from proposal_target_layer import proposal_target_layer
 from fast_rcnn import fast_rcnn , get_interest_target
 from utils import draw_fr_bboxes ,next_img_gtboxes_with_path , best_rect , read_gtbboxes
 
-model_path = 'models/792000-792000'
+model_path = 'models/0-0'
 sess = tf.Session()
 saver = tf.train.import_meta_graph(
     meta_graph_or_file=model_path + '.meta', )  # example model path ./models/fundus_300/5/model_1.ckpt
@@ -67,6 +67,7 @@ itr_fr_blobs_op = inv_transform_layer_fastrcnn( roi_blobs_op, itr_fr_bbox_target
 if __name__ == '__main__':
     img_paths = glob.glob('./clutteredPOCKIA_TEST/Images/*.jpg')
     labels = read_gtbboxes('./clutteredPOCKIA_TEST/poc_labels.txt')
+
     for path in img_paths :
         # get Image
         name=os.path.split(path)[-1]
@@ -104,11 +105,16 @@ if __name__ == '__main__':
         nms_itr_fr_blobs = itr_fr_blobs[nms_keep]
         nms_fr_cls = fr_cls[nms_keep]
         nms_fr_score = fr_score[nms_keep]
+        best_cls, best_scores, best_bboxes = best_rect(nms_fr_cls.reshape(-1), nms_fr_score.reshape(-1),
+                                                       nms_itr_fr_blobs.reshape(-1, 4))
 
-        best_candidates = best_rect(nms_fr_cls.reshape(-1), nms_fr_score  , nms_itr_fr_blobs)
-        print best_candidates
+
+
         draw_fr_bboxes(src_img, nms_fr_cls, nms_itr_fr_blobs, (255, 0, 0), 3,
                        savepath='result_test_images/{}'.format(name))
+        draw_fr_bboxes(src_img, best_cls.reshape([-1,1]), best_bboxes, (255, 0, 0), 3,
+                       savepath='result_test_best_candidates_images/{}'.format(name))
+
 
 
 """
