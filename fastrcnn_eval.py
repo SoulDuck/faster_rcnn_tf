@@ -64,10 +64,11 @@ itr_fr_bbox_target_op = get_interest_target(tf.argmax(fr_cls_op , axis =1), fr_b
 #
 itr_fr_blobs_op = inv_transform_layer_fastrcnn( roi_blobs_op, itr_fr_bbox_target_op  )
 #
+
 if __name__ == '__main__':
     img_paths = glob.glob('./clutteredPOCKIA_TEST/Images/*.jpg')
     labels = read_gtbboxes('./clutteredPOCKIA_TEST/poc_labels.txt')
-
+    f =open('best_labels.txt' , 'w')
     for path in img_paths :
         # get Image
         name=os.path.split(path)[-1]
@@ -108,6 +109,10 @@ if __name__ == '__main__':
         best_cls, best_scores, best_bboxes = best_rect(nms_fr_cls.reshape(-1), nms_fr_score.reshape(-1),
                                                        nms_itr_fr_blobs.reshape(-1, 4))
 
+
+        for k,c in enumerate(best_cls):
+            f.write('{}\t{}\t{} {} {} {}\n'.format(name , c , best_bboxes[k][0] ,best_bboxes[k][1],best_bboxes[k][2],best_bboxes[k][3] ))
+            f.flush()
 
 
         draw_fr_bboxes(src_img, nms_fr_cls, nms_itr_fr_blobs, (255, 0, 0), 3,
