@@ -185,10 +185,12 @@ def missing_data(ori_dir , label_txt):
 
 
 if __name__ == '__main__':
+    """
     ori_dir = '/Users/seongjungkim/Desktop/1차리뷰용_데이터/test'
     label_path = '/Users/seongjungkim/PycharmProjects/faster_rcnn_tf/result_test_best_candidates_images/best_labels.txt'
     print missing_data( ori_dir , label_path )
     exit()
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument('--label_path', type=str)
     parser.add_argument('--images_dir' , type = str)
