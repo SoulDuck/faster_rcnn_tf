@@ -169,6 +169,26 @@ class Poc_datum(object):
 
         print labels
 
+def missing_data(ori_dir , label_txt):
+    ori_paths = glob.glob(os.path.join(ori_dir, '*.jpg'))
+    assert len(set(ori_paths)) == len(ori_paths)
+    ori_names = map(lambda path :  os.path.split(path)[-1], ori_paths )
+
+
+    f= open(label_txt ,'r')
+    lines = f.readlines()
+    fnames = []
+    for line in lines:
+        fname=line.split('\t')[0]
+        fnames.append(fname)
+    fnames = (set(fnames))
+    ori_names = set(ori_names)
+    return ori_names - fnames
+
+
+
+
+
 
 
 
@@ -176,6 +196,10 @@ class Poc_datum(object):
 
 
 if __name__ == '__main__':
+    ori_dir = '/Users/seongjungkim/Desktop/1차리뷰용_데이터/test'
+    label_path = '/Users/seongjungkim/PycharmProjects/faster_rcnn_tf/result_test_best_candidates_images/best_labels.txt'
+    print missing_data( ori_dir , label_path )
+    exit()
     parser = argparse.ArgumentParser()
     parser.add_argument('--label_path', type=str)
     parser.add_argument('--images_dir' , type = str)

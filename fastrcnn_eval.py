@@ -121,7 +121,6 @@ if __name__ == '__main__':
                        savepath='result_test_best_candidates_images/{}'.format(name))
 
 
-
 """
 
 [[ 1211.35754395   209.34394836  1279.62561035   291.44747925]
