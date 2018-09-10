@@ -4,6 +4,7 @@ import argparse
 from PIL import Image
 import cv2
 import numpy as np
+from utils import read_gtbboxes
 class Poc_datum(object):
     def __init__(self , label_path , images_dir , image_ext = 'jpg'):
         self.root_dir = 'clutteredPOCKIA_TRAIN'
@@ -167,7 +168,10 @@ class Poc_datum(object):
 
         print labels
 
+
+
 def missing_data(ori_dir , label_txt):
+
     ori_paths = glob.glob(os.path.join(ori_dir, '*.jpg'))
     assert len(set(ori_paths)) == len(ori_paths)
     ori_names = map(lambda path :  os.path.split(path)[-1], ori_paths )
@@ -191,6 +195,7 @@ if __name__ == '__main__':
     print missing_data( ori_dir , label_path )
     exit()
     """
+
     parser = argparse.ArgumentParser()
     parser.add_argument('--label_path', type=str)
     parser.add_argument('--images_dir' , type = str)
