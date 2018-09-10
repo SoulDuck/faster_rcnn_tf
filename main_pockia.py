@@ -11,7 +11,6 @@ import math
 import roi
 import sys , time
 from mAP import poc_acc
-from aug import imgaug
 rpn_labels_op = tf.placeholder(dtype =tf.int32 , shape=[1,1,None,None] , name = 'rpn_labels_op')
 rpn_bbox_targets_op = tf.placeholder(dtype =tf.float32 , shape=[1,36,None,None] , name='rpn_bbox_targets_op')
 rpn_bbox_inside_weights_op = tf.placeholder(dtype =tf.float32 , shape=[1,36,None,None] , name='rpn_bbox_inside_weights_op')
