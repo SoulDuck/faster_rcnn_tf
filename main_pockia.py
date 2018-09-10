@@ -29,7 +29,7 @@ anchor_scales_ = tf.placeholder(tf.int32 , [3], name='anchor_scales')
 
 n_classes = 8+1
 # imgaug
-imgaug
+
 
 top_conv, _feat_stride = simple_convnet(x_)
 # RPN CLS
