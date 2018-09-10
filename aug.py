@@ -8,10 +8,28 @@ import random
 import cv2
 import math
 import copy
+import tensorflow as tf
 # ref : https://github.com/mdbloice/Augmentor
 class Imgaug(object):
     def __init__(self):
         pass;
+
+    def colorAug(self , images , phase_train):
+        def _training(image):
+            image = tf.image.random_hue(image, max_delta=0.05)
+            image = tf.image.random_contrast(image, lower=0.3, upper=1.0)
+            image = tf.image.random_brightness(image, max_delta=0.2)
+            image = tf.image.random_saturation(image, lower=0.0, upper=2.0)
+            image = tf.minimum(image, 1.0)
+            image = tf.maximum(image, 0.0)
+            return image
+
+        def _eval(image):
+            return image
+        images = tf.map_fn(lambda image: tf.cond(phase_train, lambda: _training(image), lambda: _eval(image)),
+                           images)
+        return images
+
 
     def mapping(self,img_size , coordinate):
         """

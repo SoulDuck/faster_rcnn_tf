@@ -11,7 +11,7 @@ import math
 import roi
 import sys , time
 from mAP import poc_acc
-
+from aug import imgaug
 rpn_labels_op = tf.placeholder(dtype =tf.int32 , shape=[1,1,None,None] , name = 'rpn_labels_op')
 rpn_bbox_targets_op = tf.placeholder(dtype =tf.float32 , shape=[1,36,None,None] , name='rpn_bbox_targets_op')
 rpn_bbox_inside_weights_op = tf.placeholder(dtype =tf.float32 , shape=[1,36,None,None] , name='rpn_bbox_inside_weights_op')
@@ -28,6 +28,9 @@ feat_stride_ = tf.placeholder(tf.int32, name='feat_stride')
 anchor_scales_ = tf.placeholder(tf.int32 , [3], name='anchor_scales')
 
 n_classes = 8+1
+# imgaug
+imgaug
+
 top_conv, _feat_stride = simple_convnet(x_)
 # RPN CLS
 rpn_cls = rpn_cls_layer(top_conv)
@@ -108,6 +111,7 @@ for i in range(0, max_iter):
     indices=np.where([np.reshape(rpn_labels,[-1])>0])[1]
     src_img=src_img.reshape([1]+list(np.shape(src_img)))
     if i % 16500 == 0 :
+
         feed_dict = {x_: src_img, im_dims: src_im_dims, gt_boxes: src_gt_boxes, phase_train: False,
                      rpn_labels_op: rpn_labels,
                      bbox_targets_op: bbox_targets,

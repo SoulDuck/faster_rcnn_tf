@@ -19,9 +19,7 @@ class Poc_datum(object):
         # 잘못된 좌표값이 있는 이미지는 list 에서 제거 합니다.
         # self.delete_files(self.img_paths , self.error_indices)
         self.img_paths = self.pop_elements(self.img_paths , self.error_indices)
-
         self.chk_images_labels(os.path.join(self.root_dir , 'Images') ,os.path.join(self.root_dir , 'Annotations') )
-
         assert len(self.img_paths) == len(self.poc_labels_dict), '# image paths : {} , # labels : {}'.format(
             len(self.img_paths), len(self.poc_labels_dict))
 
@@ -184,15 +182,6 @@ def missing_data(ori_dir , label_txt):
     fnames = (set(fnames))
     ori_names = set(ori_names)
     return ori_names - fnames
-
-
-
-
-
-
-
-
-
 
 
 if __name__ == '__main__':
