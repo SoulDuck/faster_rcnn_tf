@@ -97,7 +97,10 @@ max_acc = 0
 start_time = time.time()
 
 for i in range(0, max_iter):
-    src_img , src_gt_boxes = next_img_gtboxes(i)
+    try:
+        src_img , src_gt_boxes = next_img_gtboxes(i)
+    except:
+        continue;
     h,w,ch = np.shape(src_img)
     src_im_dims = [(h,w)]
     # ** GET RPN **
