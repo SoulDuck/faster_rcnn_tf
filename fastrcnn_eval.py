@@ -15,7 +15,7 @@ from proposal_target_layer import proposal_target_layer
 from fast_rcnn import fast_rcnn , get_interest_target
 from utils import draw_fr_bboxes ,next_img_gtboxes_with_path , best_rect , read_gtbboxes
 
-model_path = 'models/792000-792000'
+model_path = 'models/396000-396000'
 sess = tf.Session()
 saver = tf.train.import_meta_graph(
     meta_graph_or_file=model_path + '.meta', )  # example model path ./models/fundus_300/5/model_1.ckpt
@@ -66,8 +66,8 @@ itr_fr_blobs_op = inv_transform_layer_fastrcnn( roi_blobs_op, itr_fr_bbox_target
 #
 
 if __name__ == '__main__':
-    img_paths = glob.glob('./missing_data/Images/*.jpg')
-    labels = read_gtbboxes('./missing_data/poc_labels.txt')
+    img_paths = glob.glob('./clutteredPOCKIA_TEST/Images/*.jpg')
+    labels = read_gtbboxes('./clutteredPOCKIA_TEST/poc_labels.txt')
     f =open('best_labels.txt' , 'w')
     for path in img_paths :
         # get Image
