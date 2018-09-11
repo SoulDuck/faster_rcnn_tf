@@ -15,7 +15,7 @@ from proposal_target_layer import proposal_target_layer
 from fast_rcnn import fast_rcnn , get_interest_target
 from utils import draw_fr_bboxes ,next_img_gtboxes_with_path , best_rect , read_gtbboxes
 
-model_path = 'models/396000-396000'
+model_path = 'models/445000-445000'
 sess = tf.Session()
 saver = tf.train.import_meta_graph(
     meta_graph_or_file=model_path + '.meta', )  # example model path ./models/fundus_300/5/model_1.ckpt
