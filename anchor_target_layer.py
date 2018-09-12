@@ -95,6 +95,7 @@ def anchor_target(rpn_cls_score, gt_boxes, im_dims, _feat_stride, anchor_scales)
     overlaps = bbox_overlaps.bbox_overlaps(
         np.ascontiguousarray(anchors, dtype=np.float),
         np.ascontiguousarray(gt_boxes, dtype=np.float))
+
     """
     # 조금이라도 겹치는 indices
     overlay_indices=np.where([overlaps > 0])[1]
@@ -107,10 +108,10 @@ def anchor_target(rpn_cls_score, gt_boxes, im_dims, _feat_stride, anchor_scales)
 
     # 모든 overlaps 중에서 가장 많이 겹치는 것을 가져온다
     gt_argmax_overlaps = overlaps.argmax(axis=0)
-
     # 가장 많이 겹치는 overlab 의 overlap 비율을 가져온다, [ 0.63126253  0.76097561]
     gt_max_overlaps = overlaps[gt_argmax_overlaps,np.arange(overlaps.shape[1])] #*
-    # 가장 많이 겹치는 overlab 의 arg 을 가져온다
+
+    # 가장 많이 겹치는 overlab 의 index 을 가져온다
     gt_argmax_overlaps = np.where(overlaps == gt_max_overlaps)[0]
 
     #
