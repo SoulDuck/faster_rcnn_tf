@@ -1,8 +1,11 @@
 #-*- coding:utf-8 -*-
 import numpy as np
 from PIL import Image
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
+
 import numpy.random as npr
 import random
 import cv2
@@ -44,7 +47,7 @@ class Imgaug(object):
 
         return ret_np
     def mappings(self , img_size ,coordinates):
-        return map(lambda coord : self.mapping(img_size , coord) , coordinates)
+        return list(map(lambda coord : self.mapping(img_size , coord) , coordinates))
     def get_TLBR(self , np_img):
         """
         Top Left , Buttom Right  ==> TLRB
@@ -63,7 +66,7 @@ class Imgaug(object):
         return  w_start  , h_start , w_end , h_end # x1,y1,x2,y2
 
     def get_TLBRs(self , np_imgs):
-        return map(lambda img: self.get_TLBR(img) , np_imgs)
+        return list(map(lambda img: self.get_TLBR(img) , np_imgs))
 
     def tilt_image(self , image, angle):
         # grab the dimensions of the image and then determine the
@@ -114,7 +117,7 @@ class Imgaug(object):
     def _mask_transform(self ,img_size ,coordinates , func , index ):
         masks=self.mappings(img_size, coordinates)
         # transformed ==> tf
-        tf_masks = map(lambda mask: func(mask , index), masks)  # rotated masked
+        tf_masks = list(map(lambda mask: func(mask , index), masks))  # rotated masked
         tf_coords = self.get_TLBRs(tf_masks)
         return tf_coords
 
@@ -148,7 +151,7 @@ class Imgaug(object):
         else:
             value = value % limit_range
         return value
-    def choice_var(self , range_ = range(-10 , 10)): #
+    def choice_var(self , range_ = list(range(-10 , 10))): #
         """
         choose Random Variable at input list
         :param range_:
@@ -156,7 +159,6 @@ class Imgaug(object):
             example : [-10, -9 , -8 , 7 ]
         :return: int value
         """
-        assert type(range_) == list
         random.shuffle(range_)
         return range_[0]
 
@@ -182,9 +184,9 @@ class Imgaug(object):
         """
         assert len(np.shape(np_img)) == 3 and np.ndim(np.asarray(anns)) == 2, 'ndim : {} , shape {}'.format(
             np.ndim(np.asarray(anns)), np.shape(np_img))
-        x1s , y1s , x2s , y2s =map(lambda ind : np.asarray(anns)[:,ind] , [0,1,2,3])
-        min_x1 , min_y1= map(min , [x1s , y1s])
-        max_x2, max_y2 = map(max , [x2s, y2s])
+        x1s , y1s , x2s , y2s =list(map(lambda ind : np.asarray(anns)[:,ind] , [0,1,2,3]))
+        min_x1 , min_y1= list(map(min , [x1s , y1s]))
+        max_x2, max_y2 = list(map(max , [x2s, y2s]))
         return min_x1 , min_y1 , max_x2 , max_y2
 
 
@@ -220,7 +222,7 @@ class Imgaug(object):
         :param args: LT , LB , RB , RT
         :return:
         """
-        return map(self.get_L2 , args)
+        return list(map(self.get_L2 , args))
 
     def get_ctr(self , coordi):
         """
@@ -258,12 +260,11 @@ class TiltImages(Imgaug):
         """
         # choice one from self.angles
         angle = random.choice(self.angles)
-
         sample_dict = copy.deepcopy(sample_dict)
         # get image , coordinates
         np_img , coordinates = self.get_img_anns(sample_dict)
         # select one variable at list
-        # angle = self.choice_var(range(-10 , 10))
+        angle = self.choice_var(list(range(-10 , 10)))
         # transformed Numpy image
         tform_img = self.tilt_image(np_img, angle)
         # transformed coorinates  ,[[x1,y1,w h] ,[x1`,y1`,w`,h`]]
@@ -278,7 +279,7 @@ class RotationTransform(Imgaug):
         # get image , coordinates
         np_img , coordinates = self.get_img_anns(sample_dict)
         # select one variable at list
-        index = abs(self.choice_var(range(-10 , 10)))
+        index = abs(self.choice_var(list(range(-10 , 10))))
         # rt = Rotate , Roatate Image
         tform_img=self.rotate90(np_img , index)
         tform_coords = self._mask_transform(np_img.shape[:2], coordinates, self.rotate90, index)
@@ -295,7 +296,7 @@ class FlipTransform(Imgaug):
         np_img , coordinates = self.get_img_anns(sample_dict)
         # select one variable at list
         # numpy flip flop lib only support value > 0
-        index = abs(self.choice_var(range(-10 , 10)))
+        index = abs(self.choice_var(list(range(-10 , 10))))
         if index > 1:
             index %= 2
         tform_img = self.flipflop(np_img , index)
@@ -318,20 +319,20 @@ class CenterCrop(Imgaug):
         #end_w, max_x2, end_h, max_y2 = RB_range[0][0], RB_range[0][1], RB_range[1][0], RB_range[1][1]
         # get losses
         lt_l2 , lb_l2 , rb_l2 , rt_l2 = self.get_L2s(LT_range , LB_range , RB_range , RT_range)
-        ranges_losses  = zip([LT_range , LB_range , RB_range , RT_range] , [lt_l2 , lb_l2 , rb_l2 , rt_l2])
+        ranges_losses  = list(zip([LT_range , LB_range , RB_range , RT_range] , [lt_l2 , lb_l2 , rb_l2 , rt_l2]))
         #
         ind = np.argmin([lt_l2 , lb_l2 , rb_l2 , rt_l2])
         valid_range , valid_lossses = ranges_losses[ind]
         #
-        x_rand = self.choice_var(range(valid_range[0][0] ,valid_range[0][1]))
-        y_rand = self.choice_var(range(valid_range[1][0] , valid_range[1][1]))
+        x_rand = self.choice_var(list(range(valid_range[0][0] ,valid_range[0][1])))
+        y_rand = self.choice_var(list(range(valid_range[1][0] , valid_range[1][1])))
         #
         x_crop = abs(x_ctr - x_rand)
         y_crop = abs(y_ctr - y_rand)
         x_crop_min = x_ctr - x_crop
         y_crop_min = y_ctr - y_crop
         #
-        cropped_img = np_img[y_ctr - y_crop : y_ctr + y_crop, x_ctr - x_crop : x_ctr + x_crop]
+        cropped_img = np_img[int(y_ctr - y_crop) : int(y_ctr + y_crop), int(x_ctr - x_crop) : int(x_ctr + x_crop)]
         # Get coordinates
         cropped_coordis = coordi - np.asarray([x_crop_min, y_crop_min, x_crop_min, y_crop_min])
         new_sample_dict=self.set_img_anns(sample_dict,cropped_img , cropped_coordis)
@@ -435,11 +436,12 @@ if __name__ == '__main__':
 
     # Tilt
     imgaug=Imgaug()
-    tilt_images = TiltImages(range(-10 , 10) + [90,180,270])
+    tilt_images = TiltImages(list(range(-10 , 10)) + [90,180,270])
     sample_dict =tilt_images(sample_dict )
     t_img = sample_dict['img']
     t_coords = sample_dict['anns']
     imgaug.show_image(t_img, t_coords , 'tilt')
+    
 
     # rotate 90 ,180 ,270
     rt_images = RotationTransform()
