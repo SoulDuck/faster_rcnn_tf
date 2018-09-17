@@ -163,12 +163,12 @@ class Imgaug(object):
 
     def get_img_anns(self , sample_dict):
         assert type(sample_dict) == dict and 'img' in sample_dict.keys() and 'anns' in sample_dict.keys()
-        np_img=sample_dict['img']
+        np_img=np.asarray(sample_dict['img'])
         anns = sample_dict['anns']
         return np_img , anns
     def set_img_anns(self, sample_dict , np_img , anns ):
         assert type(sample_dict) == dict
-        sample_dict['img'] = np_img
+        sample_dict['img'] = Image.fromarray(np_img)
         sample_dict['anns'] = anns
         return sample_dict
 
@@ -193,7 +193,6 @@ class Imgaug(object):
         assert np.ndim(img) ==2 or np.ndim(img) ==3
         min_x1, min_y1, max_x2, max_y2 = self.get_minmax(img, anns)
         img_h,img_w=np.shape(img)[:2]
-        print self.get_minmax(img, anns)
         assert img_h > max_y2 and img_w > max_x2
 
         LT_range=[(0,min_x1),(0,min_y1)]
@@ -246,6 +245,8 @@ class Imgaug(object):
 
 
 class TiltImages(Imgaug):
+    def __init__(self , angles):
+        self.angles = angles
     def __call__(self, sample_dict):
         """
         sample_dict:
@@ -256,18 +257,20 @@ class TiltImages(Imgaug):
             tform ==> transformed
         :return:
         """
+        # choice one from self.angles
+        angle = random.choice(self.angles)
+
         sample_dict = copy.deepcopy(sample_dict)
         # get image , coordinates
         np_img , coordinates = self.get_img_anns(sample_dict)
         # select one variable at list
-        angle = self.choice_var(range(-10 , 10))
+        # angle = self.choice_var(range(-10 , 10))
         # transformed Numpy image
         tform_img = self.tilt_image(np_img, angle)
         # transformed coorinates  ,[[x1,y1,w h] ,[x1`,y1`,w`,h`]]
         tform_coords = self._mask_transform(np_img.shape[:2], coordinates , self.tilt_image , angle)
         # set sample_dict
         new_sample_dict=self.set_img_anns(sample_dict , tform_img , tform_coords)
-
         return new_sample_dict
 
 class RotationTransform(Imgaug):
@@ -315,20 +318,14 @@ class CenterCrop(Imgaug):
         #start_w, min_x1 , start_h , min_y1 =LT_range[0][0], LT_range[0][1] ,LT_range[1][0], LT_range[1][1]
         #end_w, max_x2, end_h, max_y2 = RB_range[0][0], RB_range[0][1], RB_range[1][0], RB_range[1][1]
         # get losses
-        print LT_range, LB_range, RB_range, RT_range
         lt_l2 , lb_l2 , rb_l2 , rt_l2 = self.get_L2s(LT_range , LB_range , RB_range , RT_range)
         ranges_losses  = zip([LT_range , LB_range , RB_range , RT_range] , [lt_l2 , lb_l2 , rb_l2 , rt_l2])
         #
         ind = np.argmin([lt_l2 , lb_l2 , rb_l2 , rt_l2])
         valid_range , valid_lossses = ranges_losses[ind]
         #
-        print valid_range[0][0] ,valid_range[0][1]
-        print valid_range[1][0] , valid_range[1][1]
         x_rand = self.choice_var(range(valid_range[0][0] ,valid_range[0][1]))
         y_rand = self.choice_var(range(valid_range[1][0] , valid_range[1][1]))
-
-
-
         #
         x_crop = abs(x_ctr - x_rand)
         y_crop = abs(y_ctr - y_rand)
@@ -338,19 +335,27 @@ class CenterCrop(Imgaug):
         cropped_img = np_img[y_ctr - y_crop : y_ctr + y_crop, x_ctr - x_crop : x_ctr + x_crop]
         # Get coordinates
         cropped_coordis = coordi - np.asarray([x_crop_min, y_crop_min, x_crop_min, y_crop_min])
-        new_sample_dict={}
-        new_sample_dict=self.set_img_anns(new_sample_dict,cropped_img , cropped_coordis)
-
+        new_sample_dict=self.set_img_anns(sample_dict,cropped_img , cropped_coordis)
         return new_sample_dict
 
 
-class BrightnessAugmentation(object):
+class BrightnessAugmentation(Imgaug):
     """
     ref : https://github.com/chainer/chainercv/blob/master/chainercv/links/model/ssd/transforms.py
     ref : https://stackoverflow.com/questions/32609098/how-to-fast-change-image-brightness-with-python-opencv
     """
-    def __call__(self , img , k ):
-        return self.increase_brightness(img , k )
+    def __init__(self , bright_range):
+        self.bright_range = bright_range
+        self.k = random.choice(bright_range)
+    def __call__(self , sample_dict):
+        sample_dict = copy.deepcopy(sample_dict)
+        np_img, coordinates = self.get_img_anns(sample_dict)
+        np_img = self.increase_brightness(np_img , self.k )
+        new_sample_dict = self.set_img_anns(sample_dict, np_img ,coordinates)
+        return new_sample_dict
+
+
+
     def increase_brightness(self , img, k):
         hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
         h, s, v = cv2.split(hsv)
@@ -361,14 +366,21 @@ class BrightnessAugmentation(object):
 
         final_hsv = cv2.merge((h, s, v))
         img = cv2.cvtColor(final_hsv, cv2.COLOR_HSV2BGR)
-        return img
+        return np.asarray(img)
 
-class ContrastTranform(object):
+class ContrastTranform(Imgaug):
     """
     ref : https://stackoverflow.com/questions/42045362/change-contrast-of-image-in-pil
     """
-    def __call__(self , img , k):
-        return self.change_contrast(Image.fromarray(img) , k)
+    def __init__(self  , k_range):
+        self.k = random.choice(k_range)
+    def __call__(self , sample_dict):
+        np_img, coordinates = self.get_img_anns(sample_dict)
+        np_img = self.change_contrast(Image.fromarray(np_img) , self.k)
+        new_sample_dict = self.set_img_anns(sample_dict, np_img , coordinates )
+        return new_sample_dict
+
+
     def change_contrast(self, img, k ):
 
         factor = (259 * (k + 255)) / (255 * (259 - k))
@@ -376,7 +388,7 @@ class ContrastTranform(object):
         def contrast(c):
             return 128 + factor * (c - 128)
 
-        return img.point(contrast)
+        return np.asarray(img.point(contrast))
 
 # ref : https://github.com/ayooshkathuria/pytorch-yolo-v3
 # ref : https://github.com/qqwweee/keras-yolo3/blob/master/kmeans.py
@@ -388,7 +400,6 @@ class ContrastTranform(object):
 class Kmeans(object):
     def __call__(self ,boxes , k , dist ):
         self.kmeans()
-
     def kmeans(self, boxes, k, dist=np.median):
         box_number = boxes.shape[0]
         distances = np.empty((box_number, k))
@@ -397,9 +408,7 @@ class Kmeans(object):
         clusters = boxes[np.random.choice(
             box_number, k, replace=False)]  # init k clusters
         while True:
-
             distances = 1 - self.iou(boxes, clusters)
-
             current_nearest = np.argmin(distances, axis=1)
             if (last_nearest == current_nearest).all():
                 break  # clusters won't change
@@ -411,7 +420,6 @@ class Kmeans(object):
 
         return clusters
 if __name__ == '__main__':
-
     img = Image.open('dog.jpg').convert('RGB')
     np_img = np.asarray(img)
     coord_bike = [124,134,124+ 443,134+286]
@@ -423,16 +431,18 @@ if __name__ == '__main__':
     sample_dict = {}
     sample_dict['img'] = np_img
     sample_dict['anns'] = coords
+    sample_dict['names'] = 'namees'
+
 
     # Tilt
     imgaug=Imgaug()
-    tilt_images = TiltImages()
-    sample_dict =tilt_images(sample_dict)
+    tilt_images = TiltImages(range(-10 , 10) + [90,180,270])
+    sample_dict =tilt_images(sample_dict )
     t_img = sample_dict['img']
     t_coords = sample_dict['anns']
     imgaug.show_image(t_img, t_coords , 'tilt')
 
-    # rotate 90 , 180 ,270
+    # rotate 90 ,180 ,270
     rt_images = RotationTransform()
     sample_dict = rt_images(sample_dict)
     rt_img = sample_dict['img']
@@ -453,4 +463,16 @@ if __name__ == '__main__':
     cc_coords = sample_dict['anns']
     imgaug.show_image(cc_img, cc_coords , 'center crop')
 
+    #BrightnessAugmentation
+    bright_aug= BrightnessAugmentation(range(10,100))
+    sample_dict = bright_aug(sample_dict )
+    ba_img = sample_dict['img']
+    ba_coords = sample_dict['anns']
+    imgaug.show_image(ba_img, ba_coords , 'bright augmentation')
 
+    #ContrastTranform
+    contrast_tranform=ContrastTranform(range(100,200))
+    sample_dict = contrast_tranform(sample_dict)
+    ct_img = sample_dict['img']
+    ct_coords = sample_dict['anns']
+    imgaug.show_image(ct_img, ct_coords, 'contrast tranform')
