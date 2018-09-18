@@ -69,6 +69,7 @@ if __name__ == '__main__':
     img_paths = glob.glob('./clutteredPOCKIA_TEST_2/Images/*.jpg')
     labels = read_gtbboxes('./clutteredPOCKIA_TEST_2/poc_labels.txt')
     f =open('best_labels.txt' , 'w')
+
     for path in img_paths :
         # get Image
         name=os.path.split(path)[-1]
