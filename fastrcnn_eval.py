@@ -66,8 +66,8 @@ itr_fr_blobs_op = inv_transform_layer_fastrcnn( roi_blobs_op, itr_fr_bbox_target
 #
 
 if __name__ == '__main__':
-    img_paths = glob.glob('./clutteredPOCKIA_TEST/Images/*.jpg')
-    labels = read_gtbboxes('./clutteredPOCKIA_TEST/poc_labels.txt')
+    img_paths = glob.glob('./clutteredPOCKIA_TEST_2/Images/*.jpg')
+    labels = read_gtbboxes('./clutteredPOCKIA_TEST_2/poc_labels.txt')
     f =open('best_labels.txt' , 'w')
     for path in img_paths :
         # get Image
