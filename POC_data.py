@@ -7,7 +7,7 @@ import numpy as np
 from utils import read_gtbboxes
 class Poc_datum(object):
     def __init__(self , label_path , images_dir , image_ext = 'jpg'):
-        self.root_dir = 'clutteredPOCKIA_TRAIN'
+        self.root_dir = 'clutteredPOCKIA_TEST_2'
         self.label_path = label_path
         self.img_dirpath = images_dir
         self.img_paths = glob.glob(os.path.join(self.img_dirpath , '*.{}'.format(image_ext)))
@@ -214,8 +214,8 @@ if __name__ == '__main__':
     parser.add_argument('--images_dir' , type = str)
     args = parser.parse_args()
 
-    poc_label_path = './clutteredPOCKIA_TRAIN/poc_labels.txt' #args.label_path
-    poc_images_dir = './clutteredPOCKIA_TRAIN/Images/' #args.images_dir
+    poc_label_path = './clutteredPOCKIA_TEST_2/poc_labels.txt' #args.label_path
+    poc_images_dir = './clutteredPOCKIA_TEST_2/Images/' #args.images_dir
     poc_datum = Poc_datum(poc_label_path , poc_images_dir)
 
 
