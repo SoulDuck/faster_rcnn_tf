@@ -149,7 +149,7 @@ class Imgaug(object):
             value = value % limit_range
         return value
     def choice_var(self , range_ = range(-10 , 10)): #
-        """
+        """K
         choose Random Variable at input list
         :param range_:
             type : list
