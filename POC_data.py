@@ -195,7 +195,7 @@ if __name__ == '__main__':
     label_path = '/Users/seongjungkim/PycharmProjects/faster_rcnn_tf/result_test_best_candidates_images/best_labels.txt'
     print missing_data( ori_dir , label_path )
     exit()
-    """
+
 
     error_list = []
     dict = read_gtbboxes('test_labels.txt')
@@ -208,7 +208,7 @@ if __name__ == '__main__':
             error_list.append(key)
 
     print len(error_list)
-
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument('--label_path', type=str)
     parser.add_argument('--images_dir' , type = str)
